@@ -1,0 +1,72 @@
+{
+  "propertyId": "palm-shore",
+  "name": "Palm Shore",
+  "fonts": {
+    "display": "Fraunces",
+    "body": "Outfit"
+  },
+  "logo": "/brand/palm-shore.svg",
+  "margins": {
+    "top": 0.08,
+    "right": 0.06,
+    "bottom": 0.1,
+    "left": 0.06
+  },
+  "requiredLines": [],
+  "bannedLines": ["cheapest", "once in a lifetime"],
+  "presets": [
+    {
+      "id": "day",
+      "label": "Day",
+      "musicId": "carefree",
+      "colors": {
+        "background": "#f3eee4",
+        "ink": "#1c2b2a",
+        "accent": "#0e6e6a",
+        "sand": "#e6d3b4",
+        "title": "#f7f3ea"
+      }
+    },
+    {
+      "id": "evening",
+      "label": "Evening",
+      "musicId": "wallpaper",
+      "colors": {
+        "background": "#1a2428",
+        "ink": "#f3eee4",
+        "accent": "#d4a574",
+        "sand": "#2a3840",
+        "title": "#f7f3ea"
+      }
+    }
+  ],
+  "music": [
+    {
+      "id": "carefree",
+      "title": "Carefree",
+      "artist": "Kevin MacLeod",
+      "file": "/brand/music/carefree.mp3",
+      "mood": "day",
+      "license": "CC BY 4.0",
+      "attribution": "\"Carefree\" by Kevin MacLeod (incompetech.com), licensed under Creative Commons Attribution 4.0."
+    },
+    {
+      "id": "easy-lemon",
+      "title": "Easy Lemon",
+      "artist": "Kevin MacLeod",
+      "file": "/brand/music/easy-lemon.mp3",
+      "mood": "light",
+      "license": "CC BY 4.0",
+      "attribution": "\"Easy Lemon\" by Kevin MacLeod (incompetech.com), licensed under Creative Commons Attribution 4.0."
+    },
+    {
+      "id": "wallpaper",
+      "title": "Wallpaper",
+      "artist": "Kevin MacLeod",
+      "file": "/brand/music/wallpaper.mp3",
+      "mood": "evening",
+      "license": "CC BY 4.0",
+      "attribution": "\"Wallpaper\" by Kevin MacLeod (incompetech.com), licensed under Creative Commons Attribution 4.0."
+    }
+  ]
+}

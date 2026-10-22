@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated voice takes, keyed by the line so a repeat is not billed again
+/.voice-cache/
+/public/library/voice/
+
+# footage masters and search scratch
+/public/library/*.mp4
+/public/library/pexels/
+/library/thumbs/
+/library/frames/
+/library/candidates.json

@@ -1,0 +1,833 @@
+{
+  "property": {
+    "id": "palm-shore",
+    "name": "Palm Shore"
+  },
+  "note": "Stock stand-in for a private trial. Masters are 1920x1080. Vertical sources are center-cropped to 16:9.",
+  "clips": [
+    {
+      "id": "30070764",
+      "title": "Aerial sandbar",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "aerial",
+        "day",
+        "guests"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/30070764.mp4",
+      "source": "https://www.pexels.com/video/aerial-view-of-stunning-tropical-beach-30070764/",
+      "author": "Asad Photo Maldives",
+      "authorUrl": "https://www.pexels.com/@asadphoto",
+      "license": "Pexels License"
+    },
+    {
+      "id": "34103646",
+      "title": "Beach swing",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/34103646.mp4",
+      "source": "https://www.pexels.com/video/tropical-beach-swing-on-white-sand-beach-34103646/",
+      "author": "Videographer Shiyaz",
+      "authorUrl": "https://www.pexels.com/@videographer-shiyaz-2356948",
+      "license": "Pexels License"
+    },
+    {
+      "id": "6145259",
+      "title": "Villas from the shore",
+      "propertyId": "palm-shore",
+      "tags": [
+        "villa",
+        "beach",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/6145259.mp4",
+      "source": "https://www.pexels.com/video/path-on-the-ocean-in-maldives-6145259/",
+      "author": "Ahmed Abd Allah",
+      "authorUrl": "https://www.pexels.com/@ahmed-abd-allah-4393137",
+      "license": "Pexels License"
+    },
+    {
+      "id": "4701090",
+      "title": "Aerial water villas",
+      "propertyId": "palm-shore",
+      "tags": [
+        "villa",
+        "aerial",
+        "pool",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/4701090.mp4",
+      "source": "https://www.pexels.com/video/resort-in-the-sea-4701090/",
+      "author": "Amos",
+      "authorUrl": "https://www.pexels.com/@amos-3103994",
+      "license": "Pexels License"
+    },
+    {
+      "id": "12540981",
+      "title": "Arrival along the pier",
+      "propertyId": "palm-shore",
+      "tags": [
+        "arrival",
+        "villa",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/12540981.mp4",
+      "source": "https://www.pexels.com/video/an-electric-vehicle-driving-on-a-wooden-pier-at-a-beach-resort-12540981/",
+      "author": "Asad Photo Maldives",
+      "authorUrl": "https://www.pexels.com/@asadphoto",
+      "license": "Pexels License"
+    },
+    {
+      "id": "25541490",
+      "title": "Villa entrance",
+      "propertyId": "palm-shore",
+      "tags": [
+        "arrival",
+        "villa",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 7.68,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/25541490.mp4",
+      "source": "https://www.pexels.com/video/the-villa-is-surrounded-by-green-plants-and-has-a-thatched-roof-25541490/",
+      "author": "Agung Pandit Wiguna",
+      "authorUrl": "https://www.pexels.com/@panditwiguna",
+      "license": "Pexels License"
+    },
+    {
+      "id": "38022277",
+      "title": "Garden gateway",
+      "propertyId": "palm-shore",
+      "tags": [
+        "arrival",
+        "sunset"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/38022277.mp4",
+      "source": "https://www.pexels.com/video/tropical-gateway-with-ocean-view-at-sunset-38022277/",
+      "author": "Anil Donoji",
+      "authorUrl": "https://www.pexels.com/@anildonoji",
+      "license": "Pexels License"
+    },
+    {
+      "id": "14695740",
+      "title": "Pool loungers",
+      "propertyId": "palm-shore",
+      "tags": [
+        "pool",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 7.3,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/14695740.mp4",
+      "source": "https://www.pexels.com/video/the-swimming-pool-at-or-near-koh-phangan-villa-14695740/",
+      "author": "Peggy Anke",
+      "authorUrl": "https://www.pexels.com/@reisefreiheit",
+      "license": "Pexels License"
+    },
+    {
+      "id": "10165855",
+      "title": "Infinity pool",
+      "propertyId": "palm-shore",
+      "tags": [
+        "pool",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 6.67,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/10165855.mp4",
+      "source": "https://www.pexels.com/video/an-infinity-pool-with-a-view-of-the-ocean-10165855/",
+      "author": "Peggy Anke",
+      "authorUrl": "https://www.pexels.com/@reisefreiheit",
+      "license": "Pexels License"
+    },
+    {
+      "id": "31387465",
+      "title": "Pool at sunset",
+      "propertyId": "palm-shore",
+      "tags": [
+        "pool",
+        "sunset"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/31387465.mp4",
+      "source": "https://www.pexels.com/video/tropical-sunset-over-resort-poolside-31387465/",
+      "author": "Vincent Rivaud",
+      "authorUrl": "https://www.pexels.com/@vince",
+      "license": "Pexels License"
+    },
+    {
+      "id": "11459158",
+      "title": "Sunset deck",
+      "propertyId": "palm-shore",
+      "tags": [
+        "pool",
+        "sunset",
+        "guests"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/11459158.mp4",
+      "source": "https://www.pexels.com/video/beach-resort-during-sunset-11459158/",
+      "author": "Peggy Anke",
+      "authorUrl": "https://www.pexels.com/@reisefreiheit",
+      "license": "Pexels License"
+    },
+    {
+      "id": "36775848",
+      "title": "Breakfast terrace",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "breakfast",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 5.87,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/36775848.mp4",
+      "source": "https://www.pexels.com/video/relaxing-outdoor-dining-with-tropical-scenery-36775848/",
+      "author": "Zenia Diamond",
+      "authorUrl": "https://www.pexels.com/@zenia-diamond-2147728402",
+      "license": "Pexels License"
+    },
+    {
+      "id": "38591835",
+      "title": "Dinner on the beach",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "sunset"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/38591835.mp4",
+      "source": "https://www.pexels.com/video/romantic-beachfront-dinner-setup-at-sunset-38591835/",
+      "author": "Mytho Digital",
+      "authorUrl": "https://www.pexels.com/@mytho",
+      "license": "Pexels License"
+    },
+    {
+      "id": "5190093",
+      "title": "Table on the sand",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "sunset"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/5190093.mp4",
+      "source": "https://www.pexels.com/video/dinner-table-on-the-beach-5190093/",
+      "author": "Peggy Anke",
+      "authorUrl": "https://www.pexels.com/@reisefreiheit",
+      "license": "Pexels License"
+    },
+    {
+      "id": "6423986",
+      "title": "Dinner after dark",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "night"
+      ],
+      "orientation": "landscape",
+      "duration": 8.03,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/6423986.mp4",
+      "source": "https://www.pexels.com/video/people-dining-beside-the-ocean-6423986/",
+      "author": "Anna Tarazevich",
+      "authorUrl": "https://www.pexels.com/@anntarazevich",
+      "license": "Pexels License"
+    },
+    {
+      "id": "38604837",
+      "title": "Ocean suite",
+      "propertyId": "palm-shore",
+      "tags": [
+        "room",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 7.46,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/38604837.mp4",
+      "source": "https://www.pexels.com/video/luxury-beachfront-suite-with-ocean-view-38604837/",
+      "author": "Lan Thanh",
+      "authorUrl": "https://www.pexels.com/@belanbannha",
+      "license": "Pexels License"
+    },
+    {
+      "id": "17887953",
+      "title": "Massage",
+      "propertyId": "palm-shore",
+      "tags": [
+        "spa"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/17887953.mp4",
+      "source": "https://www.pexels.com/video/back-massage-at-the-spa-17887953/",
+      "author": "Engin Akyurt",
+      "authorUrl": "https://www.pexels.com/@enginakyurt",
+      "license": "Pexels License"
+    },
+    {
+      "id": "9335882",
+      "title": "Spa oil",
+      "propertyId": "palm-shore",
+      "tags": [
+        "spa"
+      ],
+      "orientation": "landscape",
+      "duration": 7.6,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/9335882.mp4",
+      "source": "https://www.pexels.com/video/a-massage-therapist-putting-essential-oil-on-a-client-s-back-9335882/",
+      "author": "olia danilevich",
+      "authorUrl": "https://www.pexels.com/@olia-danilevich",
+      "license": "Pexels License"
+    },
+    {
+      "id": "39465598",
+      "title": "Couple walking the shore",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day",
+        "guests",
+        "walking"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/39465598.mp4",
+      "source": null,
+      "author": null,
+      "authorUrl": null,
+      "license": "Pexels License"
+    },
+    {
+      "id": "10494881",
+      "title": "Running in the shallows",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day",
+        "guests",
+        "playing"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/10494881.mp4",
+      "source": null,
+      "author": null,
+      "authorUrl": null,
+      "license": "Pexels License"
+    },
+    {
+      "id": "8622074",
+      "title": "Into the waves",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "sunset",
+        "guests",
+        "playing"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/8622074.mp4",
+      "source": null,
+      "author": null,
+      "authorUrl": null,
+      "license": "Pexels License"
+    },
+    {
+      "id": "4782637",
+      "title": "Beach volleyball",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "aerial",
+        "day",
+        "guests",
+        "playing"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/4782637.mp4",
+      "source": null,
+      "author": null,
+      "authorUrl": null,
+      "license": "Pexels License"
+    },
+    {
+      "id": "15207783",
+      "title": "Dinner by the water",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "sunset",
+        "guests",
+        "eating"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/15207783.mp4",
+      "source": "https://www.pexels.com/video/people-dining-al-fresco-during-sundown-15207783/",
+      "author": "Claudio AFC",
+      "authorUrl": "https://www.pexels.com/@superclaudio",
+      "license": "Pexels License"
+    },
+    {
+      "id": "6953392",
+      "title": "Plates at the table",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "guests",
+        "eating"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/6953392.mp4",
+      "source": null,
+      "author": null,
+      "authorUrl": null,
+      "license": "Pexels License"
+    },
+    {
+      "id": "12169627",
+      "title": "Friends playing volleyball",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day",
+        "guests",
+        "playing"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/12169627.mp4",
+      "source": "https://www.pexels.com/video/a-group-of-friends-playing-beach-volleyball-12169627/",
+      "author": "RDNE Stock project",
+      "authorUrl": "https://www.pexels.com/@rdne",
+      "license": "Pexels License"
+    },
+    {
+      "id": "5363080",
+      "title": "People on the beach",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day",
+        "guests"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/5363080.mp4",
+      "source": "https://www.pexels.com/video/people-at-the-beach-5363080/",
+      "author": "Taryn Elliott",
+      "authorUrl": "https://www.pexels.com/@taryn-elliott",
+      "license": "Pexels License"
+    },
+    {
+      "id": "6474620",
+      "title": "Swimming",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day",
+        "guests",
+        "playing"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/6474620.mp4",
+      "source": "https://www.pexels.com/video/people-swimming-in-the-beach-6474620/",
+      "author": "Pho Mar",
+      "authorUrl": "https://www.pexels.com/@pho-mar-2749998",
+      "license": "Pexels License"
+    },
+    {
+      "id": "13076569",
+      "title": "Guests on the resort beach",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day",
+        "guests"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/13076569.mp4",
+      "source": "https://www.pexels.com/video/tourists-on-resort-beach-13076569/",
+      "author": "Ignacio Pereira",
+      "authorUrl": "https://www.pexels.com/@ignacio-pereira-240566698",
+      "license": "Pexels License"
+    },
+    {
+      "id": "8307046",
+      "title": "Posing on the beach",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day",
+        "guests"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/8307046.mp4",
+      "source": "https://www.pexels.com/video/woman-posing-in-the-beach-8307046/",
+      "author": "Mikhail Nilov",
+      "authorUrl": "https://www.pexels.com/@mikhail-nilov",
+      "license": "Pexels License"
+    },
+    {
+      "id": "25961663",
+      "title": "Walking the dock",
+      "propertyId": "palm-shore",
+      "tags": [
+        "arrival",
+        "day",
+        "guests",
+        "walking"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/25961663.mp4",
+      "source": "https://www.pexels.com/video/a-woman-walking-on-a-dock-in-the-ocean-25961663/",
+      "author": "23  Audiovisual",
+      "authorUrl": "https://www.pexels.com/@23audiovisual",
+      "license": "Pexels License"
+    },
+    {
+      "id": "38539345",
+      "title": "Couple walking at sunset",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "sunset",
+        "guests",
+        "walking"
+      ],
+      "orientation": "landscape",
+      "duration": 5.5,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/38539345.mp4",
+      "source": "https://www.pexels.com/video/romantic-couple-walking-on-beach-at-sunset-38539345/",
+      "author": "Agung Pandit Wiguna",
+      "authorUrl": "https://www.pexels.com/@panditwiguna",
+      "license": "Pexels License"
+    },
+    {
+      "id": "8456345",
+      "title": "Eating watermelon",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day",
+        "guests",
+        "eating"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/8456345.mp4",
+      "source": "https://www.pexels.com/video/woman-eating-a-watermelon-in-the-beach-8456345/",
+      "author": "RDNE Stock project",
+      "authorUrl": "https://www.pexels.com/@rdne",
+      "license": "Pexels License"
+    },
+    {
+      "id": "6750892",
+      "title": "Back massage",
+      "propertyId": "palm-shore",
+      "tags": [
+        "spa"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/6750892.mp4",
+      "source": "https://www.pexels.com/video/a-close-up-video-of-a-back-massage-6750892/",
+      "author": "Anna Tarazevich",
+      "authorUrl": "https://www.pexels.com/@anntarazevich",
+      "license": "Pexels License"
+    },
+    {
+      "id": "9154361",
+      "title": "Massage",
+      "propertyId": "palm-shore",
+      "tags": [
+        "spa"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/9154361.mp4",
+      "source": "https://www.pexels.com/video/a-person-having-a-massage-9154361/",
+      "author": "Ron Lach",
+      "authorUrl": "https://www.pexels.com/@ron-lach",
+      "license": "Pexels License"
+    },
+    {
+      "id": "9154367",
+      "title": "Leg massage",
+      "propertyId": "palm-shore",
+      "tags": [
+        "spa"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/9154367.mp4",
+      "source": "https://www.pexels.com/video/a-person-having-a-leg-massage-9154367/",
+      "author": "Ron Lach",
+      "authorUrl": "https://www.pexels.com/@ron-lach",
+      "license": "Pexels License"
+    },
+    {
+      "id": "36720424",
+      "title": "Aerial beachfront",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "aerial",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/36720424.mp4",
+      "source": "https://www.pexels.com/video/aerial-view-of-tropical-beachfront-36720424/",
+      "author": "hugoteconecta",
+      "authorUrl": "https://www.pexels.com/@hugoteconecta-641939723",
+      "license": "Pexels License"
+    },
+    {
+      "id": "34259125",
+      "title": "Beach at sunset",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "sunset"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/34259125.mp4",
+      "source": "https://www.pexels.com/video/tranquil-sandy-beach-in-sardinia-at-sunset-34259125/",
+      "author": "Nirjhar Basak",
+      "authorUrl": "https://www.pexels.com/@nbasak",
+      "license": "Pexels License"
+    },
+    {
+      "id": "28639410",
+      "title": "Sunny tropical beach",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/28639410.mp4",
+      "source": "https://www.pexels.com/video/tranquil-tropical-beach-on-a-sunny-day-28639410/",
+      "author": "Pok Rie",
+      "authorUrl": "https://www.pexels.com/@pok-rie-33563",
+      "license": "Pexels License"
+    },
+    {
+      "id": "19316040",
+      "title": "Aerial waves",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "aerial",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/19316040.mp4",
+      "source": "https://www.pexels.com/video/an-aerial-view-of-the-ocean-and-waves-19316040/",
+      "author": "Ahmet Kurt",
+      "authorUrl": "https://www.pexels.com/@ahmetkurt",
+      "license": "Pexels License"
+    },
+    {
+      "id": "38005562",
+      "title": "Aerial coastline",
+      "propertyId": "palm-shore",
+      "tags": [
+        "beach",
+        "aerial",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/38005562.mp4",
+      "source": "https://www.pexels.com/video/scenic-aerial-view-of-waves-coastline-beach-38005562/",
+      "author": "Alex Shmakov",
+      "authorUrl": "https://www.pexels.com/@getthatalex",
+      "license": "Pexels License"
+    },
+    {
+      "id": "8627109",
+      "title": "Making pizza",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "cooking"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/8627109.mp4",
+      "source": "https://www.pexels.com/video/close-up-video-of-a-person-making-pizza-8627109/",
+      "author": "Kampus Production",
+      "authorUrl": "https://www.pexels.com/@kampus",
+      "license": "Pexels License"
+    },
+    {
+      "id": "19905870",
+      "title": "Plating food",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "cooking"
+      ],
+      "orientation": "landscape",
+      "duration": 8.01,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/19905870.mp4",
+      "source": "https://www.pexels.com/video/a-person-is-preparing-food-on-plates-in-a-kitchen-19905870/",
+      "author": "K",
+      "authorUrl": "https://www.pexels.com/@kelly",
+      "license": "Pexels License"
+    },
+    {
+      "id": "8964522",
+      "title": "Chef in the kitchen",
+      "propertyId": "palm-shore",
+      "tags": [
+        "dining",
+        "cooking"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/8964522.mp4",
+      "source": "https://www.pexels.com/video/chef-cooking-at-the-kitchen-8964522/",
+      "author": "PureRaw: Camera & Film Grain",
+      "authorUrl": "https://www.pexels.com/@whiterecord",
+      "license": "Pexels License"
+    },
+    {
+      "id": "18124689",
+      "title": "Fishing",
+      "propertyId": "palm-shore",
+      "tags": [
+        "fishing",
+        "day"
+      ],
+      "orientation": "landscape",
+      "duration": 8.0,
+      "width": 1920,
+      "height": 1080,
+      "file": "/library/18124689.mp4",
+      "source": "https://www.pexels.com/video/fishing-18124689/",
+      "author": "Manoo Media",
+      "authorUrl": "https://www.pexels.com/@manoo-media-65214113",
+      "license": "Pexels License"
+    }
+  ]
+}
