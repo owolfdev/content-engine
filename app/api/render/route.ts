@@ -7,7 +7,7 @@ import type { Plan } from "@/lib/plan";
 
 // Local only. Remotion's Chrome closes when this runs inside the Next.js server,
 // so the route hands the plan to a separate process. A deployed site needs a different path.
-const localOnly = "This render runs on the local server. A deployed site cannot make this file and needs a different render path.";
+const localOnly = "This site cannot make the file. The render runs on the studio machine.";
 
 let rendering = false;
 

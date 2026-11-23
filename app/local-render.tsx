@@ -69,8 +69,8 @@ export function LocalRender({ plan }: { plan: Plan }) {
       const voice = response.headers.get("x-render-voice");
       setMessage(
         voice === "saved-take"
-          ? "Saved palm-shore.mp4 on this computer, with the saved voice take."
-          : "Saved palm-shore.mp4 on this computer. Preview the voice line first if the file should speak.",
+          ? "Downloaded palm-shore.mp4, with the saved voice take."
+          : "Downloaded palm-shore.mp4. It has no voice yet.",
       );
     } catch {
       setMessage("The file could not be rendered.");
@@ -87,11 +87,11 @@ export function LocalRender({ plan }: { plan: Plan }) {
         disabled={busy || plan.clips.length === 0}
         onClick={() => void renderFile()}
       >
-        {busy ? "Rendering on this computer…" : "Render MP4 (this computer only)"}
+        {busy ? "Rendering…" : "Render MP4"}
       </button>
       {busy ? <RenderBar progress={progress} /> : null}
       <p className="text-sm text-zinc-500">
-        This render runs on the local server. Once the app is deployed, this button will not work. A deployed site needs a different way to make the file.
+        The file is made on the machine serving this site, then downloaded here. The Vercel site cannot make this file.
       </p>
       {message ? <p className="text-sm text-zinc-700">{message}</p> : null}
     </div>
