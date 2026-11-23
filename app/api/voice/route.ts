@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 
   if (!voiceId) {
     return Response.json(
-      { error: "ElevenLabs voice is missing." },
+      { error: "Voice is unavailable right now." },
       { status: 503 },
     );
   }
@@ -89,14 +89,14 @@ export async function POST(request: Request) {
   }
   if (!key) {
     return Response.json(
-      { error: "ElevenLabs key is missing." },
+      { error: "Voice is unavailable right now." },
       { status: 503 },
     );
   }
   if (text.length > remaining) {
     return Response.json(
       {
-        error: `This browser has ${Math.max(remaining, 0)} characters left. That line needs ${text.length}.`,
+        error: "That line is too long for now.",
       },
       { status: 429, headers: remainingHeader(Math.max(remaining, 0), "miss") },
     );
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
       const shared = await running;
       return audioResponse(shared.audio, remaining, "hit");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "ElevenLabs did not return audio.";
+      const message = error instanceof Error && !/elevenlabs|key/i.test(error.message) ? error.message : "Voice is unavailable right now.";
       return Response.json({ error: message }, { status: 502, headers: remainingHeader(remaining, "miss") });
     }
   }
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
     if (!upstream.ok) {
-      const message = upstream.status === 401 ? "ElevenLabs rejected the key." : "ElevenLabs did not return audio.";
+      const message = "Voice is unavailable right now.";
       throw new Error(message);
     }
     const audio = new Uint8Array(await upstream.arrayBuffer());
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
     result = await take;
   } catch (error) {
     pending.delete(hash);
-    const message = error instanceof Error ? error.message : "ElevenLabs did not return audio.";
+    const message = error instanceof Error && !/elevenlabs|key/i.test(error.message) ? error.message : "Voice is unavailable right now.";
     return Response.json({ error: message }, { status: 502, headers: remainingHeader(remaining, "miss") });
   }
   pending.delete(hash);

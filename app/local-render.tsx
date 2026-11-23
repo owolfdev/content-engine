@@ -49,7 +49,7 @@ export function LocalRender({ plan }: { plan: Plan }) {
       });
       if (!response.ok) {
         const raw = await response.text();
-        let error = "The file could not be rendered.";
+        let error = "The video could not be made.";
         try {
           const data = JSON.parse(raw) as { error?: string };
           if (data.error) error = data.error;
@@ -70,10 +70,10 @@ export function LocalRender({ plan }: { plan: Plan }) {
       setMessage(
         voice === "saved-take"
           ? "Downloaded palm-shore.mp4, with the saved voice take."
-          : "Downloaded palm-shore.mp4. It has no voice yet.",
+          : "Downloaded palm-shore.mp4.",
       );
     } catch {
-      setMessage("The file could not be rendered.");
+      setMessage("The video could not be made.");
     } finally {
       setBusy(false);
     }
@@ -87,19 +87,17 @@ export function LocalRender({ plan }: { plan: Plan }) {
         disabled={busy || plan.clips.length === 0}
         onClick={() => void renderFile()}
       >
-        {busy ? "Rendering…" : "Render MP4"}
+        {busy ? "Making the video…" : "Download video"}
       </button>
       {busy ? <RenderBar progress={progress} /> : null}
-      <p className="text-sm text-zinc-500">
-        The file is made on the machine serving this site, then downloaded here. The Vercel site cannot make this file.
-      </p>
+      <p className="text-sm text-zinc-500">This takes about a minute. The video downloads when it is ready.</p>
       {message ? <p className="text-sm text-zinc-700">{message}</p> : null}
     </div>
   );
 }
 
 function RenderBar({ progress }: { progress: RenderProgress | null }) {
-  const shown = progress ?? { running: true, progress: 0.02, label: "Starting the render · 2%" };
+  const shown = progress ?? { running: true, progress: 0.02, label: "Starting · 2%" };
   const percent = Math.max(0, Math.min(100, Math.round(shown.progress * 100)));
   return (
     <div className="flex w-full max-w-md flex-col gap-1" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} aria-label={shown.label}>

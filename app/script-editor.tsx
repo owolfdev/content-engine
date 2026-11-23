@@ -35,7 +35,7 @@ export function ScriptEditor({
         <h3 className="text-xl font-medium">{script.title || "Untitled cut"}</h3>
         <p className="text-sm text-zinc-500">
           {script.language === "en" ? "English" : "Language not available"} ·{" "}
-          {script.source === "pexels" ? "Pexels search" : "Palm Shore library"}
+          {script.source === "pexels" ? "Footage search" : "Palm Shore library"}
         </p>
       </header>
 

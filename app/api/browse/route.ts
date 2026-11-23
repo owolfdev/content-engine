@@ -17,8 +17,11 @@ export async function POST(request: Request) {
     const found = await browsePexels(query, "16:9", page, perPage);
     return Response.json({ ...found, page, perPage }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Pexels search failed.";
-    const status = message.includes("key") ? 503 : 502;
-    return Response.json({ error: message }, { status });
+    const message = error instanceof Error ? error.message : "";
+    const missing = message.includes("key");
+    return Response.json(
+      { error: missing ? "Footage is unavailable right now." : "The search did not go through. Try again." },
+      { status: missing ? 503 : 502 },
+    );
   }
 }

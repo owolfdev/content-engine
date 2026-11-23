@@ -7,7 +7,7 @@ import type { Plan } from "@/lib/plan";
 
 // Local only. Remotion's Chrome closes when this runs inside the Next.js server,
 // so the route hands the plan to a separate process. A deployed site needs a different path.
-const localOnly = "This site cannot make the file. The render runs on the studio machine.";
+const localOnly = "A video can't be made from this page.";
 
 let rendering = false;
 
@@ -34,20 +34,20 @@ function timeLeft(ms: number) {
 
 function describe(stage: Stage, fraction: number, remainingMs: number | null): RenderProgress {
   const portion = Math.min(1, Math.max(0, fraction));
-  if (stage === "browser") return { running: true, progress: 0.02, label: "Opening the browser · 2%" };
+  if (stage === "browser") return { running: true, progress: 0.02, label: "Starting · 2%" };
   if (stage === "bundle") {
     const value = 0.02 + portion * 0.18;
-    return { running: true, progress: value, label: `Preparing the project · ${Math.round(value * 100)}%` };
+    return { running: true, progress: value, label: `Preparing · ${Math.round(value * 100)}%` };
   }
-  if (stage === "open") return { running: true, progress: 0.2, label: "Opening the composition · 20%" };
+  if (stage === "open") return { running: true, progress: 0.2, label: "Opening the cut · 20%" };
   const value = 0.2 + portion * 0.8;
   const percent = Math.round(value * 100);
   const label =
     portion > 0.92 && remainingMs == null
-      ? `Finishing the file · ${percent}%`
+      ? `Finishing · ${percent}%`
       : remainingMs == null
-        ? `Rendering · ${percent}%`
-        : `Rendering · ${percent}% · ${timeLeft(remainingMs)}`;
+        ? `Making the video · ${percent}%`
+        : `Making the video · ${percent}% · ${timeLeft(remainingMs)}`;
   return { running: true, progress: value, label };
 }
 
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
     return Response.json({ error: localOnly }, { status: 503 });
   }
   if (rendering) {
-    return Response.json({ error: "A render is already running on this computer." }, { status: 409 });
+    return Response.json({ error: "A video is already being made. Wait for it to finish." }, { status: 409 });
   }
 
   let plan: Plan | null = null;
@@ -147,15 +147,15 @@ export async function POST(request: Request) {
     plan = null;
   }
   if (!plan || !Array.isArray(plan.clips) || plan.clips.length === 0) {
-    return Response.json({ error: "Assemble a preview before rendering a file." }, { status: 400 });
+    return Response.json({ error: "Make a preview before downloading the video." }, { status: 400 });
   }
   if (plan.clips.some((clip) => !allowedFile(clip.file))) {
-    return Response.json({ error: "A shot file is outside the local library." }, { status: 400 });
+    return Response.json({ error: "One of the clips could not be used." }, { status: 400 });
   }
 
   rendering = true;
   seenStage = 0;
-  progress = { running: true, progress: 0.02, label: "Opening the browser · 2%" };
+  progress = { running: true, progress: 0.02, label: "Starting · 2%" };
   const output = path.join(os.tmpdir(), `palm-shore-${Date.now()}.mp4`);
   try {
     await renderOnThisComputer(plan, output);
@@ -170,8 +170,9 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message.split("\n")[0] : "The file could not be rendered.";
-    return Response.json({ error: message }, { status: 500 });
+    const message = error instanceof Error ? error.message.split("\n")[0] : "The video could not be made.";
+    console.error(message);
+    return Response.json({ error: "The video could not be made. Try again in a moment." }, { status: 500 });
   } finally {
     rendering = false;
     progress = { running: false, progress: 0, label: "" };

@@ -28,7 +28,7 @@ function nextStep(messages: ChatMessage[]) {
       previewAfterBrowser = true;
     }
   }
-  if (previewAfterBrowser) return "Ask for a change, or render the file.";
+  if (previewAfterBrowser) return "Ask for a change, or download the video.";
   if (sawBrowser && browserSelected > 0) return "Ask for a short cut from the selected clips.";
   if (sawBrowser) return "Select clips, or ask for another search.";
   return "Say yes to see the videos.";

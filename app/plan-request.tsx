@@ -68,7 +68,7 @@ export function PlanRequest({
           value={source}
           onChange={(event) => setSource(event.target.value as FootageSource)}
         >
-          <option value="pexels">Pexels search, for demos</option>
+          <option value="pexels">Footage search</option>
           <option value="library">Palm Shore library</option>
         </select>
       </label>

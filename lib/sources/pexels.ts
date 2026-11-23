@@ -1,4 +1,6 @@
-import { mkdir, stat, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { mkdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { LooseShot, PlanShape, RequestReading } from "@/lib/plan";
 
@@ -61,14 +63,80 @@ async function download(url: string, dest: string) {
 
 const downloads = new Map<string, Promise<void>>();
 
+function ffmpegCommand() {
+  const dir = path.join(process.cwd(), "node_modules", "@remotion", `compositor-${process.platform}-${process.arch}`);
+  const bin = path.join(dir, "ffmpeg");
+  if (!existsSync(bin)) return { bin: "ffmpeg", env: process.env };
+  return { bin, env: { ...process.env, DYLD_LIBRARY_PATH: dir, LD_LIBRARY_PATH: dir } };
+}
+
+function runFfmpeg(args: string[]) {
+  return new Promise<void>((resolve, reject) => {
+    const command = ffmpegCommand();
+    const child = spawn(command.bin, args, { env: command.env, stdio: ["ignore", "ignore", "pipe"] as const });
+    let stderr = "";
+    child.stderr.setEncoding("utf8");
+    child.stderr.on("data", (chunk: string) => {
+      stderr = (stderr + chunk).slice(-2000);
+    });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(stderr.trim().split("\n").filter(Boolean).at(-1) || "The preview could not be prepared."));
+    });
+  });
+}
+
+async function previewReady(id: string) {
+  try {
+    const info = await stat(path.join(cacheDir, `${id}-preview.mp4`));
+    return info.size > 20_000;
+  } catch {
+    return false;
+  }
+}
+
+async function ensurePreview(id: string) {
+  if (await previewReady(id)) return;
+  const source = path.join(cacheDir, `${id}.mp4`);
+  const dest = path.join(cacheDir, `${id}-preview.mp4`);
+  const partial = `${dest}.part.mp4`;
+  try {
+    await runFfmpeg([
+      "-y",
+      "-i",
+      source,
+      "-t",
+      "30",
+      "-an",
+      "-vf",
+      "scale=w='min(640,iw)':h=-2",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-threads",
+      "2",
+      "-crf",
+      "30",
+      "-movflags",
+      "+faststart",
+      partial,
+    ]);
+    await rename(partial, dest);
+  } catch (error) {
+    await unlink(partial).catch(() => undefined);
+    throw error;
+  }
+}
+
 async function ensureFile(id: string, link: string) {
-  if (await cached(id)) return;
   const existing = downloads.get(id);
   if (existing) return existing;
   const task = (async () => {
     await mkdir(cacheDir, { recursive: true });
-    if (await cached(id)) return;
-    await download(link, path.join(cacheDir, `${id}.mp4`));
+    if (!(await cached(id))) await download(link, path.join(cacheDir, `${id}.mp4`));
+    await ensurePreview(id);
   })().finally(() => {
     downloads.delete(id);
   });
@@ -284,6 +352,12 @@ export async function browsePexels(phrase: string, shape: PlanShape = "16:9", pa
     });
   }
   return { total: body.total_results ?? clips.length, page: safePage, perPage: safePerPage, clips };
+}
+
+export async function preparePreview(file: string) {
+  const id = /^\/library\/pexels\/(\d+)\.mp4$/.exec(file)?.[1];
+  if (!id || !(await cached(id))) return;
+  await ensurePreview(id);
 }
 
 export async function savePexelsClip(id: string, link: string) {

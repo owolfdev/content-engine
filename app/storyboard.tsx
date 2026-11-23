@@ -283,8 +283,8 @@ export function Storyboard({
         {voiceError ? <p className="text-sm text-red-700">{voiceError}</p> : null}
         <p className="text-sm text-zinc-500">
           {recording
-            ? "This recording is saved. Assembling the cut reuses it and does not record again."
-            : "Preview the line once to record it. Editing it, and assembling the cut, does not record a new take."}
+            ? "This voice is saved. Building the preview uses it again."
+            : "Play the line once to hear it. Changing the words does not record it again."}
         </p>
       </div>
       <ol className="flex flex-col gap-8">

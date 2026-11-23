@@ -32,8 +32,10 @@ export type CutProps = {
 
 function mediaSrc(src: string) {
   if (!src.startsWith("/")) return src;
-  if (getRemotionEnvironment().isRendering) return staticFile(src.slice(1));
-  return src;
+  const rendering = getRemotionEnvironment().isRendering;
+  const file = rendering ? src : src.replace(/^(\/library\/pexels\/\d+)\.mp4$/, "$1-preview.mp4");
+  if (rendering) return staticFile(file.slice(1));
+  return file;
 }
 
 export function Cut({
@@ -53,7 +55,7 @@ export function Cut({
   margins,
 }: CutProps) {
   const frame = useCurrentFrame();
-  const { width, height, durationInFrames } = useVideoConfig();
+  const { width, height, durationInFrames, fps } = useVideoConfig();
   const titleWindow = Math.min(90, Math.max(30, durationInFrames - 15));
   const titleOpacity = interpolate(
     frame,
@@ -75,7 +77,7 @@ export function Cut({
     <AbsoluteFill style={{ background }}>
       <Series>
         {clips.map((clip, index) => (
-          <Series.Sequence key={`${clip.src}-${index}`} durationInFrames={clip.durationInFrames}>
+          <Series.Sequence key={`${clip.src}-${index}`} durationInFrames={clip.durationInFrames} premountFor={Math.round(fps * 2)}>
             <AbsoluteFill>
               <OffthreadVideo
                 src={mediaSrc(clip.src)}

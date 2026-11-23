@@ -291,7 +291,7 @@ function ClipTile({
           </span>
         </button>
       </div>
-      <p className="truncate px-2 py-1 text-xs text-zinc-600">{clip.author || "Pexels"}</p>
+      <p className="truncate px-2 py-1 text-xs text-zinc-600">{clip.author || "Contributor"}</p>
     </li>
   );
 }

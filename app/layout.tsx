@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Palm Shore",
-  description: "Style guide for the content engine trial.",
+  description: "Make a short film from Palm Shore footage.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

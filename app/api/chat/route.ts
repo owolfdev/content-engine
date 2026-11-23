@@ -17,9 +17,9 @@ type ModelMessage = {
   tool_call_id?: string;
 };
 
-const instructions = `You are the editor for a private resort video tool called Palm Shore. The searchable footage is Pexels stock, used as the stand-in library.
+const instructions = `You are the Palm Shore editor helping a guest make a short video from the resort footage.
 
-Call a tool before you state a count, show footage, or assemble a cut. Then reply in one or two plain sentences. Do not mention tools, JSON, or components.
+Call a tool before you state a count, show footage, or assemble a cut. Then reply in one or two plain sentences. Speak as if you are talking to a guest. Do not mention tools, software, stock sites, servers, files, or how the app is built.
 
 Rules:
 - count_videos before you say how many videos match. Repeat the subject in that reply, and ask if they want to see them.
@@ -131,10 +131,10 @@ async function complete(key: string, model: string, messages: ModelMessage[]) {
     choices?: { message?: ModelMessage }[];
   } | null;
   if (!response.ok) {
-    throw new Error(body?.error?.message || "The model could not reply.");
+    throw new Error("The reply did not come back.");
   }
   const message = body?.choices?.[0]?.message;
-  if (!message) throw new Error("The model could not reply.");
+  if (!message) throw new Error("The reply did not come back.");
   return message;
 }
 
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
   await connection();
   const key = process.env.OPENAI_API_KEY;
   if (!key) {
-    return Response.json({ error: "Add OPENAI_API_KEY to .env.local and restart the dev server." }, { status: 503 });
+    return Response.json({ error: "The assistant is unavailable right now." }, { status: 503 });
   }
 
   let payload: { messages?: unknown; selection?: unknown; latestQuery?: unknown } = {};
@@ -215,8 +215,9 @@ export async function POST(request: Request) {
       }
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "The model could not reply.";
-    return Response.json({ error: message }, { status: 502 });
+    const message = error instanceof Error ? error.message : "";
+    const guest = message && !/pexels|openai|api|key|env|server|model/i.test(message) ? message : "The reply did not come back.";
+    return Response.json({ error: guest }, { status: 502 });
   }
 
   return Response.json({

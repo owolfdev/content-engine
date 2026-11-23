@@ -30,7 +30,32 @@ export function CutPreview({
   bodyFont: string;
 }) {
   const [shape, setShape] = useState<PlanShape>(plan.shape);
+  const [previewReady, setPreviewReady] = useState(false);
+  const [previewProblem, setPreviewProblem] = useState<string | null>(null);
   const recording = savedVoice(plan.spokenLine);
+  const clipFiles = plan.clips.map((clip) => clip.file).join("|");
+
+  useEffect(() => {
+    let active = true;
+    setPreviewReady(false);
+    setPreviewProblem(null);
+    fetch("/api/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ files: clipFiles.split("|").filter(Boolean) }),
+    })
+      .then((response) => {
+        if (!active) return;
+        if (!response.ok) setPreviewProblem("The preview could not be prepared.");
+        else setPreviewReady(true);
+      })
+      .catch(() => {
+        if (active) setPreviewProblem("The preview could not be prepared.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [clipFiles]);
 
   useEffect(() => {
     setShape(plan.shape);
@@ -87,9 +112,12 @@ export function CutPreview({
         ))}
       </div>
       {plan.spokenLine && !recording ? (
-        <p className="text-zinc-500">This cut has no voice yet. Ask to hear a line when it should speak. Putting the preview together does not record one.</p>
+        <p className="text-zinc-500">This preview is silent.</p>
       ) : null}
-      <Player
+      {previewProblem ? <p className="text-zinc-500">{previewProblem}</p> : null}
+      {previewReady ? null : previewProblem ? null : <p className="text-zinc-500">Preparing the preview…</p>}
+      {previewReady ? (
+        <Player
           component={Cut}
           inputProps={inputProps}
           durationInFrames={Math.max(1, frames.reduce((sum, frame) => sum + frame, 0))}
@@ -99,10 +127,11 @@ export function CutPreview({
           controls
           acknowledgeRemotionLicense
           style={{ width: displayWidth, maxWidth: "100%" }}
-      />
+        />
+      ) : null}
       <p className="text-zinc-500">
-        {seconds.toFixed(0)} seconds. The picture is center-cropped to the frame.
-        {recording ? " Music drops while the voice speaks." : ""}
+        {seconds.toFixed(0)} seconds. The picture fills the frame.
+        {recording ? " The music dips while the voice speaks." : ""}
       </p>
     </div>
   );

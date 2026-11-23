@@ -16,7 +16,7 @@ function titleCase(value: string) {
 
 export async function cutFromSelection(selection: SelectedClip[], seconds: number, title: string, query: string): Promise<Plan> {
   const chosen = selection.slice(0, 6);
-  if (!chosen.length) throw new Error("Select a few clips in the browser first.");
+  if (!chosen.length) throw new Error("Select a few clips first.");
   const duration = Math.min(30, Math.max(8, Math.round(Number(seconds)) || 12));
   const shares = lengths(duration, chosen.length);
   const shots: ChosenShot[] = [];
@@ -42,6 +42,6 @@ export async function cutFromSelection(selection: SelectedClip[], seconds: numbe
     seconds: shot.seconds,
   }));
   const plan = assembleStoryboard(script, shots);
-  plan.notes = [`Made from ${shots.length} selected clips.`, `${duration} seconds. A cut on this computer stays between 8 and 30 seconds.`];
+  plan.notes = [`Made from ${shots.length} selected clips.`, `${duration} seconds. A preview stays between 8 and 30 seconds.`];
   return plan;
 }
