@@ -97,10 +97,11 @@ function renderOnThisComputer(plan: Plan, output: string) {
               PWD: process.cwd(),
               LANG: "en_US.UTF-8",
               LC_ALL: "en_US.UTF-8",
+              NODE_ENV: process.env.NODE_ENV,
               ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
               ELEVENLABS_MODEL_ID: process.env.ELEVENLABS_MODEL_ID,
             },
-            stdio: ["ignore", "pipe", "pipe"],
+            stdio: ["ignore", "pipe", "pipe"] as const,
           },
         );
         let stdout = "";
