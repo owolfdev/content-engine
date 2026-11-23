@@ -16,6 +16,7 @@ type PexelsVideo = {
   duration?: number;
   user?: { name?: string; url?: string };
   video_files?: PexelsFile[];
+  video_pictures?: { picture?: string }[];
 };
 
 const cacheDir = path.join(process.cwd(), "public", "library", "pexels");
@@ -167,12 +168,12 @@ function orientationFor(shape: PlanShape) {
   return "landscape";
 }
 
-async function readPage(phrase: string, shape: PlanShape, page: number) {
+async function readPage(phrase: string, shape: PlanShape, page: number, perPage = 15) {
   const key = process.env.PEXELS_API_KEY;
   if (!key) throw new Error("Pexels key is missing.");
   const endpoint = new URL("https://api.pexels.com/videos/search");
   endpoint.searchParams.set("query", phrase);
-  endpoint.searchParams.set("per_page", "15");
+  endpoint.searchParams.set("per_page", String(perPage));
   endpoint.searchParams.set("orientation", orientationFor(shape));
   endpoint.searchParams.set("page", String(page));
   const response = await fetch(endpoint, {
@@ -235,6 +236,62 @@ async function loadThrough(phrase: string, shape: PlanShape, index: number) {
     if (searchLocks.get(cacheKey) === current) searchLocks.delete(cacheKey);
   }
   return currentEntry;
+}
+
+export type BrowseClip = {
+  id: string;
+  link: string;
+  image?: string;
+  author?: string;
+  sourcePage?: string;
+  duration: number;
+};
+
+function pexelsFileLink(link: string) {
+  try {
+    const url = new URL(link);
+    return url.protocol === "https:" && url.hostname.endsWith("pexels.com");
+  } catch {
+    return false;
+  }
+}
+
+export async function countPexels(phrase: string, shape: PlanShape = "16:9") {
+  const query = phrase.trim();
+  if (!query) return 0;
+  const body = await readPage(query, shape, 1, 1);
+  return body.total_results ?? 0;
+}
+
+export async function browsePexels(phrase: string, shape: PlanShape = "16:9", page = 1, perPage = 12) {
+  const query = phrase.trim();
+  const safePage = Math.min(500, Math.max(1, Math.floor(page) || 1));
+  const safePerPage = Math.min(48, Math.max(4, Math.floor(perPage) || 12));
+  if (!query) return { total: 0, page: safePage, perPage: safePerPage, clips: [] as BrowseClip[] };
+  const body = await readPage(query, shape, safePage, safePerPage);
+  const clips: BrowseClip[] = [];
+  for (const video of body.videos ?? []) {
+    const id = String(video.id ?? "");
+    const file = pickFile(video, shape);
+    if (!id || !file?.link) continue;
+    clips.push({
+      id,
+      link: file.link,
+      image: video.video_pictures?.find((picture) => picture.picture)?.picture,
+      author: video.user?.name,
+      sourcePage: video.url,
+      duration: Math.max(1, Number(video.duration) || 8),
+    });
+  }
+  return { total: body.total_results ?? clips.length, page: safePage, perPage: safePerPage, clips };
+}
+
+export async function savePexelsClip(id: string, link: string) {
+  if (!/^\d+$/.test(id) || !pexelsFileLink(link)) {
+    throw new Error("A selected clip is not a Pexels file.");
+  }
+  await ensureFile(id, link);
+  return `/library/pexels/${id}.mp4`;
 }
 
 export async function pexelsAt(phrase: string, shape: PlanShape, index: number): Promise<PexelsPick | null> {

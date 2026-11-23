@@ -1,3 +1,4 @@
+import { writeSync } from "node:fs";
 import { cp, copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -17,12 +18,17 @@ if (!planPath || !output) {
 
 let bundled: Promise<string> | null = null;
 
+function report(update: { stage: "browser" | "bundle" | "open" | "render"; fraction?: number; remainingMs?: number | null }) {
+  writeSync(1, `PROGRESS ${JSON.stringify(update)}\n`);
+}
+
 function serveUrl() {
   if (!bundled) {
     const pending = bundle({
       entryPoint: path.join(process.cwd(), "remotion/index.tsx"),
       publicDir: path.join(process.cwd(), "public"),
       symlinkPublicDir: true,
+      onProgress: (value) => report({ stage: "bundle", fraction: value / 100 }),
     }).catch((error: unknown) => {
       bundled = null;
       throw error;
@@ -73,10 +79,12 @@ async function chromeExecutable() {
 
 try {
   const plan = JSON.parse(await readFile(planPath, "utf8")) as Plan;
+  report({ stage: "browser" });
   const voice = await voiceFor(plan);
   const browserExecutable = await chromeExecutable();
   const inputProps = renderCutProps(plan, voice);
   const location = await serveUrl();
+  report({ stage: "open" });
   const composition = await selectComposition({
     serveUrl: location,
     id: "Cut",
@@ -94,6 +102,13 @@ try {
     crf: 20,
     concurrency: 1,
     timeoutInMilliseconds: 120_000,
+    onProgress: (update) => {
+      report({
+        stage: "render",
+        fraction: update.progress,
+        remainingMs: update.renderedFrames >= 10 && update.renderEstimatedTime > 0 ? update.renderEstimatedTime : null,
+      });
+    },
   });
   await writeFile(`${output}.voice`, voice ? "saved-take" : "none");
 } catch (error) {

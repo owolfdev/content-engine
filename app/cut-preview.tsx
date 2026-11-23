@@ -87,7 +87,7 @@ export function CutPreview({
         ))}
       </div>
       {plan.spokenLine && !recording ? (
-        <p className="text-zinc-500">This cut has no voice yet. Preview the line on the storyboard. Assembling does not record a new one.</p>
+        <p className="text-zinc-500">This cut has no voice yet. Ask to hear a line when it should speak. Putting the preview together does not record one.</p>
       ) : null}
       <Player
           component={Cut}

@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { readFile, unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { connection } from "next/server";
 import type { Plan } from "@/lib/plan";
 
 // Local only. Remotion's Chrome closes when this runs inside the Next.js server,
@@ -9,6 +10,63 @@ import type { Plan } from "@/lib/plan";
 const localOnly = "This render runs on the local server. A deployed site cannot make this file and needs a different render path.";
 
 let rendering = false;
+
+type Stage = "browser" | "bundle" | "open" | "render";
+
+type RenderProgress = {
+  running: boolean;
+  progress: number;
+  label: string;
+};
+
+const stageRank: Record<Stage, number> = { browser: 0, bundle: 1, open: 2, render: 3 };
+
+let progress: RenderProgress = { running: false, progress: 0, label: "" };
+let seenStage = 0;
+
+function timeLeft(ms: number) {
+  const seconds = Math.ceil(ms / 1000);
+  if (seconds < 15) return "a few seconds left";
+  if (seconds < 60) return `about ${Math.ceil(seconds / 5) * 5} sec left`;
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  return minutes === 1 ? "about 1 min left" : `about ${minutes} min left`;
+}
+
+function describe(stage: Stage, fraction: number, remainingMs: number | null): RenderProgress {
+  const portion = Math.min(1, Math.max(0, fraction));
+  if (stage === "browser") return { running: true, progress: 0.02, label: "Opening the browser · 2%" };
+  if (stage === "bundle") {
+    const value = 0.02 + portion * 0.18;
+    return { running: true, progress: value, label: `Preparing the project · ${Math.round(value * 100)}%` };
+  }
+  if (stage === "open") return { running: true, progress: 0.2, label: "Opening the composition · 20%" };
+  const value = 0.2 + portion * 0.8;
+  const percent = Math.round(value * 100);
+  const label =
+    portion > 0.92 && remainingMs == null
+      ? `Finishing the file · ${percent}%`
+      : remainingMs == null
+        ? `Rendering · ${percent}%`
+        : `Rendering · ${percent}% · ${timeLeft(remainingMs)}`;
+  return { running: true, progress: value, label };
+}
+
+function noteProgress(line: string) {
+  if (!line.startsWith("PROGRESS ")) return;
+  let update: { stage?: string; fraction?: number; remainingMs?: number | null };
+  try {
+    update = JSON.parse(line.slice("PROGRESS ".length)) as typeof update;
+  } catch {
+    return;
+  }
+  if (update.stage !== "browser" && update.stage !== "bundle" && update.stage !== "open" && update.stage !== "render") return;
+  const rank = stageRank[update.stage];
+  if (rank < seenStage) return;
+  seenStage = rank;
+  const next = describe(update.stage, update.fraction ?? 0, typeof update.remainingMs === "number" ? update.remainingMs : null);
+  if (next.progress < progress.progress) return;
+  progress = next;
+}
 
 function allowedFile(file: string) {
   return (file.startsWith("/library/") || file.startsWith("/brand/")) && !file.includes("..");
@@ -42,9 +100,17 @@ function renderOnThisComputer(plan: Plan, output: string) {
               ELEVENLABS_VOICE_ID: process.env.ELEVENLABS_VOICE_ID,
               ELEVENLABS_MODEL_ID: process.env.ELEVENLABS_MODEL_ID,
             },
-            stdio: ["ignore", "ignore", "pipe"],
+            stdio: ["ignore", "pipe", "pipe"],
           },
         );
+        let stdout = "";
+        child.stdout.setEncoding("utf8");
+        child.stdout.on("data", (chunk: string) => {
+          stdout += chunk;
+          const lines = stdout.split("\n");
+          stdout = lines.pop() ?? "";
+          for (const line of lines) noteProgress(line);
+        });
         let stderr = "";
         child.stderr.setEncoding("utf8");
         child.stderr.on("data", (chunk: string) => {
@@ -54,7 +120,12 @@ function renderOnThisComputer(plan: Plan, output: string) {
         child.on("close", (code) => {
           unlink(planPath).catch(() => undefined);
           if (code === 0) resolve();
-          else reject(new Error(stderr.trim().split("\n").filter(Boolean).at(-1) || "The local render process failed."));
+          else {
+            const lines = stderr.trim().split("\n").filter(Boolean);
+            const message = lines.find((line) => /Error|Cannot /.test(line)) || lines[0] || "The local render process failed.";
+            console.error(message);
+            reject(new Error(message));
+          }
         });
       }),
   );
@@ -82,6 +153,8 @@ export async function POST(request: Request) {
   }
 
   rendering = true;
+  seenStage = 0;
+  progress = { running: true, progress: 0.02, label: "Opening the browser · 2%" };
   const output = path.join(os.tmpdir(), `palm-shore-${Date.now()}.mp4`);
   try {
     await renderOnThisComputer(plan, output);
@@ -100,7 +173,15 @@ export async function POST(request: Request) {
     return Response.json({ error: message }, { status: 500 });
   } finally {
     rendering = false;
+    progress = { running: false, progress: 0, label: "" };
     await unlink(output).catch(() => undefined);
     await unlink(`${output}.voice`).catch(() => undefined);
   }
+}
+
+export async function GET() {
+  await connection();
+  return Response.json(rendering ? progress : { running: false, progress: 0, label: "" }, {
+    headers: { "Cache-Control": "no-store" },
+  });
 }
