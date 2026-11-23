@@ -2,17 +2,27 @@
 
 You are on the studio MacBook Air. This file is the context for that machine. The owner is Oliver Wolfson. A different computer, the work machine, is where the app was built. The Air is the machine that stays on and renders files.
 
-Read this before changing anything. Do the tunnel task below. Do not start the later work at the end of this file unless the owner asks.
+Read this before changing anything. Finish the tunnel task below. Do not start the later work at the end of this file unless the owner asks.
+
+If you are on the work machine, do not install `cloudflared` and do not repeat the setup below. Your part is the proof at the end, and only after the owner says the Access application is saved and the tunnel is running on the Air.
 
 ## Where things stand
 
 On 24 November 2026 the owner confirmed the app is running on this Air. The repo is cloned, dependencies are installed, `.env.local` is present, and the site answers on this machine. Do not repeat that setup.
 
-The work machine is on Node v22.20.0. This Air may be on a newer Node 22 patch. Leave that in place. If this Air is on Node 24 or newer, install Node 22 for this project and run the app with it. The render was proven on the Node 22 line.
+The work machine is on Node v22.20.0. This Air is on Node v22.22.1 through nvm. Leave that in place. The render was proven on the Node 22 line.
 
 Git remote: `https://github.com/owolfdev/content-engine.git`, branch `main`. The public site is deployed from that branch on Vercel. Vercel serves the conversation, the gallery, and the in-browser preview. Vercel does not render MP4 files. `POST /api/render` returns 503 when `VERCEL` is set.
 
-The tunnel is the unfinished step. It is not installed yet.
+The tunnel is partly connected. Do not log in again, do not create another tunnel, and do not change the hostname.
+
+On 24 November 2026 the owner put `cryptoxombies.com` on Cloudflare. The assigned nameservers are `gigi.ns.cloudflare.com` and `tanner.ns.cloudflare.com`, and public DNS is already answering from them. Other hostnames on this domain can still point at a normal website. The tunnel uses one name only.
+
+The hostname for this Air is `content-engine.cryptoxombies.com`. The only email allowed to sign in is `owolfdev@gmail.com`.
+
+`cloudflared` 2026.11.2 is installed with Homebrew. `cloudflared tunnel login` succeeded. The origin certificate is `/Users/wolf/.cloudflared/cert.pem`. The tunnel is named `content-engine`, id `93c2d13c-9cc9-45d2-9452-442631fd8a61`. Its credentials file is `/Users/wolf/.cloudflared/93c2d13c-9cc9-45d2-9452-442631fd8a61.json`. The config is `/Users/wolf/.cloudflared/config.yml`, and it points that hostname at `http://localhost:3000`. The DNS CNAME for the hostname routes to this tunnel. Do not commit the certificate, the credentials JSON, or the config file. Do not print them.
+
+Cloudflare Access is not created yet. The tunnel process is not running. Until both of those are done, the hostname does not serve the app. Sleep prevention on power has not been confirmed.
 
 ## What this app is
 
@@ -24,46 +34,35 @@ Pexels is the stand-in footage library for a fictional resort, Palm Shore. Searc
 
 ## The task now
 
-Put this running app on a Cloudflare Tunnel, with a login in front of it, and prove that the work machine can open it and render one short file.
+Finish the login gate, start the tunnel that is already configured, and prove that the work machine can open it and render one short file.
 
-Leave the app running. It is `npm run dev` on port 3000 unless the owner says otherwise. Point the tunnel at `http://localhost:3000`. Do not restart it, switch it to `next start`, or change ports unless it has already stopped.
+Leave the app running. It is `npm run dev` on port 3000 unless the owner says otherwise. The tunnel already points at `http://localhost:3000`. Do not restart the app, switch it to `next start`, or change ports unless it has already stopped.
 
-### Before the tunnel
+### Still to do on the Air
 
 - The Air stays plugged in, with the lid open, on a desk. macOS sleeps a closed lid. Turn on the setting that prevents sleep while on power.
 - Do not turn on Remote Login, Screen Sharing, or File Sharing.
 - Do not forward a port on the home router. The tunnel makes an outbound connection.
-- Ask the owner which hostname to use. The domain’s DNS must already be on Cloudflare. Do not invent a domain or a hostname.
-- Ask which email addresses may sign in. Do not leave the hostname open to the public internet.
 
-### Install and connect
+The owner's next action is in the Cloudflare dashboard, before the tunnel is started for anyone else. Zero Trust, Access, Applications, add an application. Choose self-hosted. Domain `content-engine.cryptoxombies.com`. An Allow policy that includes only `owolfdev@gmail.com`. Login method: one-time PIN. Access is free for this test (under 50 people).
 
-1. Install `cloudflared`. Use Homebrew when it is present: `brew install cloudflared`. Otherwise use the macOS package from Cloudflare’s tunnel docs.
-2. `cloudflared tunnel login`. The owner completes the browser approval on this Air.
-3. `cloudflared tunnel create content-engine`.
-4. Add a config file under `~/.cloudflared/config.yml`:
+After the owner says that application is saved, on this Air run `cloudflared tunnel run content-engine` and leave that process running. The config file is already in place:
 
 ```yaml
 tunnel: content-engine
-credentials-file: /Users/<air-user>/.cloudflared/<tunnel-uuid>.json
+credentials-file: /Users/wolf/.cloudflared/93c2d13c-9cc9-45d2-9452-442631fd8a61.json
 ingress:
-  - hostname: <the hostname the owner chose>
+  - hostname: content-engine.cryptoxombies.com
     service: http://localhost:3000
   - service: http_status:404
 ```
-
-Use the real credentials path that `tunnel create` printed. Do not commit this file or the credentials JSON.
-
-5. `cloudflared tunnel route dns content-engine <hostname>`.
-6. Create a Cloudflare Access application for that hostname before starting the tunnel for anyone else. In the Zero Trust dashboard: Access, Applications, self-hosted, the same hostname, Allow policy limited to the owner’s email addresses. Access is free for this test (under 50 people).
-7. `cloudflared tunnel run content-engine`. Leave that process running.
 
 ### Prove it
 
 From the work machine, not from the Air’s own browser:
 
-1. Open the hostname.
-2. Sign in through Access.
+1. Open `https://content-engine.cryptoxombies.com`.
+2. Sign in through Access as `owolfdev@gmail.com`.
 3. Ask for a short cut and render one file.
 4. Confirm the MP4 downloads and plays.
 
@@ -111,6 +110,6 @@ A 4 GB DigitalOcean droplet was considered and set aside. This Air is the render
 
 ## After the tunnel works
 
-Stop. Tell the owner the hostname and that one file rendered from the work machine.
+Stop. Tell the owner that one file rendered from the work machine through `https://content-engine.cryptoxombies.com`.
 
 The following is later, and only if the owner asks: keep the conversation on Vercel, and change the render button so that site sends the cut to this Air with a shared secret. Until then, the button on Vercel still refuses to make a file, and the button on this Air makes the file.
