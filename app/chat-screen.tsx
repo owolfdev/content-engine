@@ -40,6 +40,8 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const wasBusy = useRef(false);
 
   useEffect(() => {
     try {
@@ -62,6 +64,11 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [lastId, busy]);
+
+  useEffect(() => {
+    if (wasBusy.current && !busy) inputRef.current?.focus();
+    wasBusy.current = busy;
+  }, [busy]);
 
   function toggleClip(messageId: string, clip: ChatClip) {
     setMessages((current) =>
@@ -185,6 +192,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
         }}
       >
         <input
+          ref={inputRef}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           disabled={busy || !ready}
