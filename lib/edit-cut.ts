@@ -1,3 +1,5 @@
+import { selectionLimit } from "@/lib/chat-cut";
+import type { SelectedClip } from "@/lib/chat";
 import type { Plan, PlanClip } from "@/lib/plan";
 
 export const minShot = 0.1;
@@ -74,6 +76,41 @@ export function moveShot(plan: Plan, from: number, to: number): { plan: Plan } |
   const [shot] = clips.splice(from, 1);
   clips.splice(to, 0, shot);
   return { plan: settle({ ...plan, clips }) };
+}
+
+function typicalLength(plan: Plan) {
+  const lengths = plan.clips.map(shotLength).filter((span) => span > 0).sort((a, b) => a - b);
+  if (!lengths.length) return 2;
+  return lengths[Math.floor((lengths.length - 1) / 2)];
+}
+
+export function addShots(plan: Plan, clips: SelectedClip[]): { plan: Plan; added: number } | { error: string } {
+  const room = selectionLimit - plan.clips.length;
+  if (room <= 0) return { error: "The video already has 60 clips." };
+  const fresh = clips.filter((clip) => clip.id && !plan.clips.some((shot) => shot.id === clip.id)).slice(0, room);
+  if (!fresh.length) return { error: "Those clips are already in the video." };
+  const usual = typicalLength(plan);
+  const shots: PlanClip[] = fresh.map((clip) => {
+    const source = Math.max(minShot, Number(clip.duration) || usual);
+    const span = roundTime(Math.min(source, Math.max(minShot, usual)));
+    return {
+      id: clip.id,
+      title: clip.author?.trim() || "Clip",
+      file: `/library/pexels/${clip.id}.mp4`,
+      tags: [],
+      role: "wide",
+      viewpoint: "ground",
+      start: 0,
+      end: span,
+      author: clip.author,
+      sourcePage: clip.sourcePage,
+      license: "Pexels License",
+      stream: clip.link,
+      sourceDuration: source,
+      image: clip.image,
+    };
+  });
+  return { plan: settle({ ...plan, clips: [...plan.clips, ...shots] }), added: shots.length };
 }
 
 export function removeShot(plan: Plan, index: number): { plan: Plan } | { error: string } {

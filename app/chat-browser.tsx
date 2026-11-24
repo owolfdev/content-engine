@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ChatBrowser, ChatClip } from "@/lib/chat";
+import type { ChatBrowser, ChatClip, SelectedClip } from "@/lib/chat";
 
 const sorts = [
   { id: "search", label: "Search order" },
@@ -45,10 +45,16 @@ export function ChatBrowserView({
   message,
   onToggle,
   onPage,
+  hasVideo = false,
+  videoIds = [],
+  onAdd,
 }: {
   message: ChatBrowser;
   onToggle: (clip: ChatClip) => void;
   onPage: (query: string, page: number, perPage: number, clips: ChatClip[], total: number) => void;
+  hasVideo?: boolean;
+  videoIds?: string[];
+  onAdd?: (clips: SelectedClip[]) => string;
 }) {
   const page = message.page ?? 1;
   const perPage = message.perPage ?? 12;
@@ -219,7 +225,18 @@ export function ChatBrowserView({
       </div>
       {selectedClips.length > 0 ? (
         <div className="flex flex-col gap-2 border-t border-zinc-200 pt-3">
-          <p className="text-sm text-zinc-700">Selected</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-zinc-700">Selected</p>
+            {hasVideo && selectedClips.some((clip) => !videoIds.includes(clip.id)) ? (
+              <button
+                type="button"
+                className="rounded border border-zinc-300 px-2 py-1 text-sm"
+                onClick={() => setNote(onAdd?.(selectedClips) ?? "Make a video first.")}
+              >
+                Add to video
+              </button>
+            ) : null}
+          </div>
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {selectedClips.map((clip) => (
               <ClipTile

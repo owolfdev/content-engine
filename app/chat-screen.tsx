@@ -6,6 +6,7 @@ import { ChatBrowserView } from "@/app/chat-browser";
 import { ChatPreviewView } from "@/app/chat-preview";
 import { ProjectSettings } from "@/app/project-settings";
 import type { ChatClip, ChatMessage, SelectedClip } from "@/lib/chat";
+import { addShots } from "@/lib/edit-cut";
 import type { Plan } from "@/lib/plan";
 import { defaultSession, styleGuide, type StyleSession } from "@/lib/style";
 
@@ -78,6 +79,22 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
   useEffect(() => {
     document.title = session?.wordmark.trim() || "Video";
   }, [session]);
+
+  function addToVideo(clips: SelectedClip[]) {
+    const openCut = [...messages].reverse().find((message) => message.kind === "preview" && message.editing);
+    const latestCut = [...messages].reverse().find((message) => message.kind === "preview");
+    const cutMessage = openCut ?? latestCut;
+    if (!cutMessage || cutMessage.kind !== "preview") return "Make a video first.";
+    const result = addShots(cutMessage.plan, clips);
+    if ("error" in result) return result.error;
+    setMessages((current) =>
+      current.map((message) => {
+        if (message.kind !== "preview" || message.id !== cutMessage.id) return message;
+        return { ...message, plan: result.plan, prior: message.plan, editing: true };
+      }),
+    );
+    return result.added === 1 ? "Added 1 clip." : `Added ${result.added} clips.`;
+  }
 
   function updateSession(next: StyleSession) {
     setSession(next);
@@ -229,6 +246,10 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
     }
   }
 
+  const openCut = [...messages].reverse().find((message) => message.kind === "preview" && message.editing);
+  const latestCut = [...messages].reverse().find((message) => message.kind === "preview");
+  const currentCut = openCut ?? latestCut;
+  const videoIds = currentCut?.kind === "preview" ? currentCut.plan.clips.map((clip) => clip.id) : [];
   const brand = session ?? defaultSession(styleGuide);
 
   return (
@@ -250,6 +271,9 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
                   message={message}
                   onToggle={(clip) => toggleClip(message.id, clip)}
                   onPage={(query, page, perPage, clips, total) => showPage(message.id, query, page, perPage, clips, total)}
+                  hasVideo={currentCut?.kind === "preview"}
+                  videoIds={videoIds}
+                  onAdd={addToVideo}
                 />
               );
             }

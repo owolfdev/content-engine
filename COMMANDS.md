@@ -16,11 +16,12 @@ The length is whatever you ask for, up to 10 minutes. Every selected clip is use
 make_cut 12
 
 edit_cut
-Opens the editor on the current video. A shot can be trimmed, moved, or removed from here too.
+Opens the editor on the current video. A shot can be trimmed, moved, or removed from here too. Selected clips that are not already in the video can be added to the end.
 edit_cut
 edit_cut trim clip=2 edge=end by=-0.5
 edit_cut move from=3 to=1
 edit_cut remove clip=2
+edit_cut add
 
 project_settings
 Opens the project settings: the property name, logo, where the logo sits, type, and theme.

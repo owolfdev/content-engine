@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { ChatClip, SelectedClip } from "@/lib/chat";
 import { cutFromSelection, maxCutSeconds, selectionLimit } from "@/lib/chat-cut";
-import { moveShot, removeShot, shotLength, trimShot, type TrimEdge, type TrimMode } from "@/lib/edit-cut";
+import { addShots, moveShot, removeShot, shotLength, trimShot, type TrimEdge, type TrimMode } from "@/lib/edit-cut";
 import type { Plan } from "@/lib/plan";
 import { browsePexels, countPexels } from "@/lib/sources/pexels";
 
@@ -86,12 +86,12 @@ export const tools = [
     type: "function",
     function: {
       name: "edit_cut",
-      description: "Open the editor on the video already on screen, or trim, move, or remove one shot in it. Do not use this to make a new video or to search.",
+      description: "Open the editor on the video already on screen, or trim, move, remove, or add a shot. add puts selected clips that are not already in the video onto the end. Do not use this to make a new video or to search.",
       parameters: {
         type: "object",
         additionalProperties: false,
         properties: {
-          action: { type: "string", enum: ["open", "trim", "move", "remove"], description: "open shows the editor. trim changes one shot. move reorders a shot. remove drops a shot." },
+          action: { type: "string", enum: ["open", "trim", "move", "remove", "add"], description: "open shows the editor. trim changes one shot. move reorders a shot. remove drops a shot. add appends selected clips that are not already in the video." },
           clip: { type: "number", description: "Shot number, starting at 1 from the left." },
           edge: { type: "string", enum: ["start", "end", "length"], description: "Which part of the shot to change. length is how long it stays." },
           seconds: { type: "number", description: "Seconds to add, or the length to set. Negative makes a shot shorter." },
@@ -249,7 +249,7 @@ export async function runCommand(name: string, args: CommandArgs, context: Comma
     const reply = `Here is a ${length} second video from the selected clips.${trimmed}${capped}`;
     return { forModel: { made: true, seconds: preview.duration, clips: preview.clips.length, title: preview.title }, reply, browser: null, preview, settings: false, clear: false, editing: false, replace: false };
   }
-  if (name === "edit_cut") return editCut(args, context.cut);
+  if (name === "edit_cut") return editCut(args, context);
   return { forModel: { error: "That action is not available." }, reply: "That action is not available.", browser: null, preview: null, settings: false, clear: false, editing: false, replace: false };
 }
 
@@ -291,6 +291,7 @@ function parseEdit(rest: string): { error: string } | { name: "edit_cut"; args: 
     if (!Number.isFinite(clip) || !Number.isFinite(to)) return { error: "edit_cut move needs two places. For example: edit_cut move from=3 to=1" };
     return { name: "edit_cut", args: { action, clip, to } };
   }
+  if (action === "add") return { name: "edit_cut", args: { action: "add" } };
   if (action === "trim") {
     const clip = numberArg(namedValue(rest, "clip"));
     const edge = (namedValue(rest, "edge") ?? "end").toLowerCase();
@@ -299,10 +300,11 @@ function parseEdit(rest: string): { error: string } | { name: "edit_cut"; args: 
     if (!Number.isFinite(clip) || !Number.isFinite(seconds)) return { error: "edit_cut trim needs a clip and a length. For example: edit_cut trim clip=2 edge=end by=-0.5" };
     return { name: "edit_cut", args: { action, clip, edge, mode, seconds } };
   }
-  return { error: "edit_cut can open, trim, move, or remove. For example: edit_cut" };
+  return { error: "edit_cut can open, trim, move, remove, or add. For example: edit_cut add" };
 }
 
-function editCut(args: CommandArgs, cut: Plan | null): CommandEffect {
+function editCut(args: CommandArgs, context: CommandContext): CommandEffect {
+  const cut = context.cut;
   const action = String(args.action ?? "open");
   if (!cut) {
     return idle("Make a video first.", { error: "No video is on screen. If the guest wants a new video from selected clips, call make_cut. Do not search.", editing: true });
@@ -319,6 +321,13 @@ function editCut(args: CommandArgs, cut: Plan | null): CommandEffect {
     const result = moveShot(cut, index, to);
     if ("error" in result) return idle(result.error, { error: result.error });
     return { ...idle(`The ${ordinal(index)} clip is now ${to === 0 ? "first" : ordinal(to)}.`, { preview: result.plan }), forModel: { moved: index + 1, to: to + 1 } };
+  }
+  if (action === "add") {
+    if (!context.selection.length) return idle("Select a few clips first.", { error: "No clips are selected. Ask the guest to select clips. Do not search." });
+    const result = addShots(cut, context.selection);
+    if ("error" in result) return idle(result.error, { error: result.error });
+    const reply = result.added === 1 ? "Added 1 clip." : `Added ${result.added} clips.`;
+    return { ...idle(reply, { preview: result.plan }), forModel: { added: result.added, clips: result.plan.clips.length, seconds: result.plan.duration } };
   }
   if (action === "trim") {
     const edge = String(args.edge ?? "end") as TrimEdge;
@@ -339,5 +348,5 @@ function editCut(args: CommandArgs, cut: Plan | null): CommandEffect {
     else if (shotLength(after) > shotLength(before) + 0.01) reply = `${name} is longer.`;
     return { ...idle(reply, { preview: result.plan }), forModel: { trimmed: index + 1, seconds: shotLength(after) } };
   }
-  return idle("The editor can open, trim, move, or remove a clip.", { error: "action must be open, trim, move, or remove." });
+  return idle("The editor can open, trim, move, remove, or add a clip.", { error: "action must be open, trim, move, remove, or add." });
 }
