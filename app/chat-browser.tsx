@@ -3,6 +3,44 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChatBrowser, ChatClip } from "@/lib/chat";
 
+const sorts = [
+  { id: "search", label: "Search order" },
+  { id: "maker", label: "Maker, A to Z" },
+  { id: "maker-desc", label: "Maker, Z to A" },
+  { id: "shortest", label: "Shortest" },
+  { id: "longest", label: "Longest" },
+] as const;
+
+type GallerySort = (typeof sorts)[number]["id"];
+
+function makerName(clip: ChatClip) {
+  return clip.author?.trim().toLocaleLowerCase() || "";
+}
+
+function sortedClips(clips: ChatClip[], sort: GallerySort) {
+  if (sort === "search") return clips;
+  return clips.slice().sort((a, b) => {
+    if (sort === "shortest" || sort === "longest") {
+      const delta = a.duration - b.duration;
+      return sort === "shortest" ? delta : -delta;
+    }
+    const left = makerName(a);
+    const right = makerName(b);
+    if (!left && right) return 1;
+    if (left && !right) return -1;
+    const delta = left.localeCompare(right);
+    return sort === "maker" ? delta : -delta;
+  });
+}
+
+function lengthLabel(seconds: number) {
+  const total = Math.max(0, Math.round(seconds));
+  const minutes = Math.floor(total / 60);
+  const rest = total % 60;
+  if (minutes === 0) return `${rest}s`;
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
 export function ChatBrowserView({
   message,
   onToggle,
@@ -17,6 +55,8 @@ export function ChatBrowserView({
   const pages = Math.max(1, Math.ceil(message.total / perPage));
   const [phrase, setPhrase] = useState(message.query);
   const [size, setSize] = useState(String(perPage));
+  const [sort, setSort] = useState<GallerySort>("search");
+  const clips = sortedClips(message.clips, sort);
   const [playingKey, setPlayingKey] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -103,11 +143,28 @@ export function ChatBrowserView({
         aria-label="Search"
         className="w-full rounded border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none"
       />
-      <p className="text-sm text-zinc-700">
-        {loading ? "Searching…" : `${message.total.toLocaleString()} videos. ${message.selected.length} selected.`}
-      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-sm text-zinc-700">
+          {loading ? "Searching…" : `${message.total.toLocaleString()} videos. ${message.selected.length} selected.`}
+        </p>
+        <label className="ml-auto flex items-center gap-2 text-sm text-zinc-600">
+          Sort
+          <select
+            aria-label="Sort"
+            className="rounded border border-zinc-300 bg-white px-2 py-1"
+            value={sort}
+            onChange={(event) => setSort(event.target.value as GallerySort)}
+          >
+            {sorts.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {message.clips.map((clip) => (
+        {clips.map((clip) => (
           <ClipTile
             key={clip.id}
             clip={clip}
@@ -291,7 +348,9 @@ function ClipTile({
           </span>
         </button>
       </div>
-      <p className="truncate px-2 py-1 text-xs text-zinc-600">{clip.author || "Contributor"}</p>
+      <p className="truncate px-2 py-1 text-xs text-zinc-600">
+        {clip.author || "Contributor"} · {lengthLabel(clip.duration)}
+      </p>
     </li>
   );
 }

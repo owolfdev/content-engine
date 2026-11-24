@@ -70,7 +70,7 @@ export const tools = [
     type: "function",
     function: {
       name: "make_cut",
-      description: "Make a preview from the clips already selected. Use this when the guest asks for a video from that selection.",
+      description: "Make a preview from the clips already selected. Call this when the guest asks for that video or says they cannot see it. The app writes the guest reply, so do not describe the preview yourself.",
       parameters: {
         type: "object",
         additionalProperties: false,

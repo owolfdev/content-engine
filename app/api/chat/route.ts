@@ -26,7 +26,7 @@ If they ask which commands exist, how to type a command, or for help, call comma
 Otherwise interpret their intention:
 - count_videos when they ask how many videos match a subject, or name a new subject. query is only the subject, a few words, such as crows. Then ask if they want to see them.
 - show_videos when they ask to see footage, agree to look, or say the videos are not on screen. query is the subject. The gallery appears only because this command ran. Do not say the videos are on screen unless this command ran in this turn.
-- make_cut when they ask to make a video from the clips already selected. seconds is the length they asked for, even when it is one second or less. Pass that number unchanged. The preview appears with that reply, so do not ask for permission again. If none are selected, ask them to select clips in the gallery already on screen. Do not open a new search.
+- make_cut when they ask to make a video from the clips already selected, or they say they cannot see that video. seconds is the length they asked for, even when it is one second or less. Pass that number unchanged. The app writes the reply and shows the preview. Do not describe the preview yourself, and do not ask for permission. Do not open a new search.
 - edit_cut when they want to edit the video already on screen, trim a shot, move a shot, or drop a shot. action is open when they only want the editor, such as "let's edit this". Shot numbers start at 1 from the left. For "a little shorter", trim the end by about half a second with mode by. For "hold it for three seconds", set edge length, mode to, and seconds 3. For "start it two seconds later", set edge start, mode by, and seconds 2. Do not make a new cut and do not search.
 - project_settings when they ask to change the project, the brand, the logo, where the logo sits, the fonts, or the theme. The settings appear with that reply. Do not ask whether to open them, and do not turn that request into a footage search.
 - clear_history when they ask to clear, reset, or delete the conversation. Do not search.
@@ -113,6 +113,11 @@ async function complete(key: string, model: string, messages: ModelMessage[]) {
   return message;
 }
 
+function narratesCut(text: string, selected: number) {
+  if (/preview is ready|preview it now|made a |made the |i made |now ready|video is ready|ready for you to watch|ready for preview/i.test(text)) return true;
+  return selected > 0 && /select clips|select a few|gallery already on screen/i.test(text);
+}
+
 function guestMessage(error: unknown) {
   const message = error instanceof Error ? error.message : "";
   const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
@@ -174,16 +179,30 @@ export async function POST(request: Request) {
   let replace = false;
 
   try {
+    let acted = false;
     for (let round = 0; round < 3; round += 1) {
       const message = await complete(key, model, messages);
       const calls = message.tool_calls ?? [];
       if (!calls.length) {
-        reply = message.content?.trim() || reply;
+        const text = message.content?.trim() ?? "";
+        if (!acted && narratesCut(text, selection.length) && round < 1) {
+          messages.push({ role: "assistant", content: text });
+          messages.push({
+            role: "system",
+            content: selection.length
+              ? `${selection.length} clips are selected. Call make_cut with the length they asked for. The app writes the reply and shows the preview.`
+              : "No clips are selected. Call make_cut if they asked for a video. The app will tell them to select clips. Do not say a preview is ready.",
+          });
+          continue;
+        }
+        reply = text || reply;
         break;
       }
+      acted = true;
       messages.push({ role: "assistant", content: message.content ?? "", tool_calls: calls });
       let showGuide = false;
       let edited = false;
+      let made = false;
       for (const call of calls) {
         const effect = await runCommand(call.function.name, argumentsOf(call), commandContext, "model");
         if (effect.browser) browser = effect.browser;
@@ -203,13 +222,22 @@ export async function POST(request: Request) {
           reply = effect.reply;
           edited = true;
         }
+        if (call.function.name === "make_cut") {
+          const outcome = effect.forModel as { made?: boolean; error?: string };
+          const needsLength = outcome.made === false && outcome.error === "Pass the length in seconds.";
+          if (!needsLength) {
+            reply = effect.reply;
+            preview = effect.preview;
+            made = true;
+          }
+        }
         if (call.function.name === "commands") {
           reply = effect.reply;
           showGuide = true;
         }
         messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(effect.forModel) });
       }
-      if (showGuide || settings || clear || edited) break;
+      if (showGuide || settings || clear || edited || made) break;
     }
   } catch (error) {
     return Response.json({ error: guestMessage(error) }, { status: 502 });
