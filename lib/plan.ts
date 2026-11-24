@@ -48,6 +48,7 @@ export type PlanClip = {
   author?: string;
   sourcePage?: string;
   license?: string;
+  stream?: string;
 };
 
 export type PlanGraphics = {

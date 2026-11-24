@@ -39,6 +39,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [livePreview, setLivePreview] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const wasBusy = useRef(false);
@@ -146,7 +147,9 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
         });
       }
       if (response.ok && data.preview) {
-        added.push({ id: crypto.randomUUID(), role: "assistant", kind: "preview", plan: data.preview });
+        const previewId = crypto.randomUUID();
+        added.push({ id: previewId, role: "assistant", kind: "preview", plan: data.preview });
+        setLivePreview(previewId);
       }
       setMessages((current) => [...current, ...added]);
     } catch {
@@ -181,7 +184,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
                 />
               );
             }
-            return <ChatPreviewView key={message.id} plan={message.plan} titleFont={titleFont} bodyFont={bodyFont} />;
+            return <ChatPreviewView key={message.id} plan={message.plan} titleFont={titleFont} bodyFont={bodyFont} background={message.id === livePreview} />;
           })}
           {busy ? <p className="text-sm text-zinc-500">Working…</p> : null}
           <div ref={endRef} />

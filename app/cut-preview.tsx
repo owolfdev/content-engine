@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Player } from "@remotion/player";
 import { Cut, type CutProps } from "@/composition/Cut";
 import { clipFrames, compositionSeconds, fps } from "@/composition/timeline";
-import type { Plan, PlanShape } from "@/lib/plan";
+import type { Plan, PlanClip, PlanShape } from "@/lib/plan";
 import { styleGuide } from "@/lib/style";
 import { savedVoice } from "@/app/voice-memory";
 
@@ -33,23 +33,19 @@ export function CutPreview({
 }) {
   const [shape, setShape] = useState<PlanShape>(plan.shape);
   const [previewReady, setPreviewReady] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewProblem, setPreviewProblem] = useState<string | null>(null);
   const recording = savedVoice(plan.spokenLine);
   const clipFiles = plan.clips.map((clip) => `${clip.file}@${clip.start}-${clip.end}`).join("|");
 
   useEffect(() => {
+    if (quick) return;
     let active = true;
     setPreviewReady(false);
-    setPreviewUrl(null);
     setPreviewProblem(null);
-    const clips = plan.clips.map((clip) => ({ file: clip.file, start: clip.start, end: clip.end }));
-    const music = styleGuide.music.find((item) => item.id === plan.musicId)?.file ?? null;
-    const payload = quick ? { clips, shape, music } : { files: plan.clips.map((clip) => clip.file) };
     fetch("/api/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ files: plan.clips.map((clip) => clip.file) }),
     })
       .then(async (response) => {
         if (!active) return;
@@ -57,12 +53,6 @@ export function CutPreview({
           setPreviewProblem("The preview could not be prepared.");
           return;
         }
-        const data = (await response.json()) as { url?: string };
-        if (quick && !data.url) {
-          setPreviewProblem("The preview could not be prepared.");
-          return;
-        }
-        if (data.url) setPreviewUrl(data.url);
         setPreviewReady(true);
       })
       .catch(() => {
@@ -71,7 +61,7 @@ export function CutPreview({
     return () => {
       active = false;
     };
-  }, [clipFiles, plan.clips, plan.musicId, quick, shape]);
+  }, [clipFiles, plan.clips, quick]);
 
   useEffect(() => {
     setShape(plan.shape);
@@ -131,19 +121,8 @@ export function CutPreview({
         <p className="text-zinc-500">This preview is silent.</p>
       ) : null}
       {previewProblem ? <p className="text-zinc-500">{previewProblem}</p> : null}
-      {previewReady ? null : previewProblem ? null : (
-        <p className="text-zinc-500">{quick ? "Preparing a quick preview…" : "Preparing the preview…"}</p>
-      )}
-      {quick && previewUrl ? (
-        <video
-          key={previewUrl}
-          src={previewUrl}
-          controls
-          playsInline
-          className="bg-black"
-          style={{ width: displayWidth, maxWidth: "100%" }}
-        />
-      ) : null}
+      {!quick && !previewReady && !previewProblem ? <p className="text-zinc-500">Preparing the preview…</p> : null}
+      {quick ? <InstantCut clips={plan.clips} music={music?.file ?? null} shape={shape} width={displayWidth} /> : null}
       {!quick && previewReady ? (
         <Player
           component={Cut}
@@ -159,9 +138,65 @@ export function CutPreview({
       ) : null}
       <p className="text-zinc-500">
         {seconds.toFixed(0)} seconds. The picture fills the frame.
-        {quick ? " The finished video adds the title and logo." : ""}
+        {quick ? " This plays now. The finished video, with the title and logo, is made in the background." : ""}
         {recording ? " The music dips while the voice speaks." : ""}
       </p>
+    </div>
+  );
+}
+
+function InstantCut({
+  clips,
+  music,
+  shape,
+  width,
+}: {
+  clips: PlanClip[];
+  music: string | null;
+  shape: PlanShape;
+  width: number;
+}) {
+  const [index, setIndex] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const clip = clips[index];
+  const src = clip?.stream || clip?.file || "";
+  const limit = Math.max(0.4, (clip?.end ?? 1) - (clip?.start ?? 0));
+  const ratio = shape === "9:16" ? "9 / 16" : shape === "1:1" ? "1 / 1" : "16 / 9";
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = 0;
+    void video.play().catch(() => undefined);
+    if (index === 0) void audioRef.current?.play().catch(() => undefined);
+  }, [index, src]);
+
+  function onTime() {
+    const video = videoRef.current;
+    if (!video || video.currentTime < limit) return;
+    if (index + 1 < clips.length) setIndex(index + 1);
+    else {
+      video.pause();
+      audioRef.current?.pause();
+    }
+  }
+
+  if (!clip) return null;
+  return (
+    <div>
+      <video
+        ref={videoRef}
+        key={`${src}-${index}`}
+        src={src}
+        muted
+        playsInline
+        autoPlay
+        onTimeUpdate={onTime}
+        className="bg-black object-cover"
+        style={{ width, maxWidth: "100%", aspectRatio: ratio }}
+      />
+      {music ? <audio ref={audioRef} src={music} autoPlay /> : null}
     </div>
   );
 }

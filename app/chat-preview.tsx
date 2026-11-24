@@ -15,10 +15,12 @@ export function ChatPreviewView({
   plan,
   titleFont,
   bodyFont,
+  background = false,
 }: {
   plan: Plan;
   titleFont: string;
   bodyFont: string;
+  background?: boolean;
 }) {
   let cursor = 0;
   const rows = plan.clips.map((clip) => {
@@ -40,7 +42,7 @@ export function ChatPreviewView({
           </li>
         ))}
       </ol>
-      <LocalRender plan={plan} />
+      <LocalRender plan={plan} autoStart={background} />
     </div>
   );
 }
