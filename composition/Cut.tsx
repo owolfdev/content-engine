@@ -12,7 +12,7 @@ import {
 } from "remotion";
 
 export type CutProps = {
-  clips: { src: string; durationInFrames: number }[];
+  clips: { src: string; durationInFrames: number; trimBefore?: number }[];
   title: string;
   spokenLine: string;
   wordmark: string;
@@ -29,6 +29,7 @@ export type CutProps = {
   logoPlace?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   width: number;
   height: number;
+  fps?: number;
 };
 
 function mediaSrc(src: string) {
@@ -79,10 +80,11 @@ export function Cut({
     <AbsoluteFill style={{ background }}>
       <Series>
         {clips.map((clip, index) => (
-          <Series.Sequence key={`${clip.src}-${index}`} durationInFrames={clip.durationInFrames} premountFor={Math.round(fps * 2)}>
+          <Series.Sequence key={`${clip.src}-${index}`} durationInFrames={clip.durationInFrames} premountFor={Math.min(clip.durationInFrames, Math.round(fps * 2))}>
             <AbsoluteFill>
               <OffthreadVideo
                 src={mediaSrc(clip.src)}
+                trimBefore={Math.max(0, clip.trimBefore ?? 0)}
                 volume={0}
                 muted
                 toneMapped={false}
@@ -97,19 +99,21 @@ export function Cut({
       {music ? <Audio src={mediaSrc(music)} volume={musicVolume} /> : null}
       {voice ? <Audio src={mediaSrc(voice)} /> : null}
 
-      <Img
-        src={mediaSrc(logo)}
-        alt=""
-        style={{
-          position: "absolute",
-          width: height * 0.07,
-          height: height * 0.07,
-          top: logoPlace.startsWith("top") ? height * margins.top : undefined,
-          bottom: logoPlace.startsWith("bottom") ? height * margins.bottom : undefined,
-          left: logoPlace.endsWith("left") ? width * margins.left : undefined,
-          right: logoPlace.endsWith("right") ? width * margins.right : undefined,
-        }}
-      />
+      {logo ? (
+        <Img
+          src={mediaSrc(logo)}
+          alt=""
+          style={{
+            position: "absolute",
+            width: height * 0.07,
+            height: height * 0.07,
+            top: logoPlace.startsWith("top") ? height * margins.top : undefined,
+            bottom: logoPlace.startsWith("bottom") ? height * margins.bottom : undefined,
+            left: logoPlace.endsWith("left") ? width * margins.left : undefined,
+            right: logoPlace.endsWith("right") ? width * margins.right : undefined,
+          }}
+        />
+      ) : null}
 
       <div
         style={{
@@ -120,17 +124,19 @@ export function Cut({
           opacity: titleOpacity,
         }}
       >
-        <p
-          style={{
-            margin: 0,
-            color: accent,
-            fontFamily: bodyFont,
-            fontSize: height * 0.028,
-            letterSpacing: "0.04em",
-          }}
-        >
-          {wordmark}
-        </p>
+        {wordmark ? (
+          <p
+            style={{
+              margin: 0,
+              color: accent,
+              fontFamily: bodyFont,
+              fontSize: height * 0.028,
+              letterSpacing: "0.04em",
+            }}
+          >
+            {wordmark}
+          </p>
+        ) : null}
         <h1
           style={{
             margin: "0.2em 0 0",

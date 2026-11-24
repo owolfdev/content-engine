@@ -15,6 +15,12 @@ export function LocalRender({ plan }: { plan: Plan }) {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<RenderProgress | null>(null);
   const fileRef = useRef<Blob | null>(null);
+  const signature = plan.clips.map((clip) => `${clip.id}:${clip.start}:${clip.end}`).join("|");
+
+  useEffect(() => {
+    fileRef.current = null;
+    setMessage(null);
+  }, [signature]);
 
   useEffect(() => {
     if (!busy) {

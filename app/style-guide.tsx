@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import {
   defaultSession,
+  noMusic,
+  sessionTrack,
   type StyleGuide,
   type StyleSession,
 } from "@/lib/style";
@@ -44,9 +46,7 @@ export function StyleGuidePreview({
     ...preset.colors,
     accent: session.accent ?? preset.colors.accent,
   };
-  const track =
-    guide.music.find((item) => item.id === (session.musicId ?? preset.musicId)) ??
-    guide.music[0];
+  const track = sessionTrack(session.musicId);
   const titleFamily = session.titleFont === "display" ? displayFont : bodyFont;
 
   const frameStyle = {
@@ -81,7 +81,6 @@ export function StyleGuidePreview({
                   ...current,
                   presetId: event.target.value,
                   accent: null,
-                  musicId: null,
                 }))
               }
             >
@@ -141,8 +140,8 @@ export function StyleGuidePreview({
                 reader.readAsDataURL(file);
               }}
             />
-            {session.logo ? (
-              <button type="button" className="text-left text-zinc-500" onClick={() => setSession((current) => ({ ...current, logo: null }))}>
+            {session.logo !== guide.logo ? (
+              <button type="button" className="text-left text-zinc-500" onClick={() => setSession((current) => ({ ...current, logo: guide.logo }))}>
                 Use the original logo
               </button>
             ) : null}
@@ -163,11 +162,12 @@ export function StyleGuidePreview({
             Music
             <select
               className="rounded border border-zinc-300 bg-white px-2 py-2"
-              value={track.id}
+              value={track?.id ?? noMusic}
               onChange={(event) =>
                 setSession((current) => ({ ...current, musicId: event.target.value }))
               }
             >
+              <option value={noMusic}>No music</option>
               {guide.music.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.title}
@@ -191,7 +191,7 @@ export function StyleGuidePreview({
         <section className="flex min-w-0 flex-col gap-4" aria-label="Brand preview">
           <div className="aspect-video overflow-hidden rounded-md" style={frameStyle}>
             <div className="flex h-full min-w-0 flex-col justify-between">
-              <img src={session.logo || guide.logo} alt="" className="h-10 w-10" />
+              {session.logo ? <img src={session.logo} alt="" className="h-10 w-10" /> : null}
               <div className="min-w-0">
                 <p className="text-sm tracking-wide" style={{ color: colors.accent, fontFamily: bodyFont }}>
                   {session.wordmark}
@@ -203,8 +203,8 @@ export function StyleGuidePreview({
             </div>
           </div>
 
-          <audio key={track.id} controls src={track.file} className="w-full" />
-          <p className="text-xs leading-5 text-zinc-500">{track.attribution} Files in the app are 45-second previews.</p>
+          {track ? <audio key={track.id} controls src={track.file} className="w-full" /> : null}
+          {track ? <p className="text-xs leading-5 text-zinc-500">{track.attribution} Files in the app are 45-second previews.</p> : null}
 
           <div className="text-sm text-zinc-600">
             <p>Banned lines: {guide.bannedLines.length ? guide.bannedLines.join(", ") : "none"}</p>

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { brandLogo } from "@/app/brand-session";
-import { logoPlaces, styleGuide, type LogoPlace, type StyleSession } from "@/lib/style";
+import { defaultSession, logoPlaces, noMusic, sessionTrack, styleGuide, type LogoPlace, type StyleSession } from "@/lib/style";
 
 const placeLabel: Record<LogoPlace, string> = {
   "top-left": "Top left",
@@ -21,7 +20,7 @@ export function ProjectSettings({
   const [note, setNote] = useState<string | null>(null);
   const preset = styleGuide.presets.find((item) => item.id === session.presetId) ?? styleGuide.presets[0];
   const accent = session.accent ?? preset.colors.accent;
-  const musicId = session.musicId ?? preset.musicId;
+  const musicId = sessionTrack(session.musicId)?.id ?? noMusic;
 
   function chooseLogo(file: File) {
     if (file.size > 1_500_000) {
@@ -49,7 +48,7 @@ export function ProjectSettings({
         />
       </label>
       <div className="flex items-center gap-3">
-        <img src={brandLogo(session)} alt="" className="h-10 w-10" />
+        {session.logo ? <img src={session.logo} alt="" className="h-10 w-10" /> : <span className="h-10 w-10 rounded border border-zinc-200" />}
         <label className="rounded border border-zinc-300 px-3 py-2">
           Logo
           <input
@@ -63,8 +62,8 @@ export function ProjectSettings({
             }}
           />
         </label>
-        {session.logo ? (
-          <button type="button" className="text-zinc-500" onClick={() => onChange({ ...session, logo: null })}>
+        {session.logo !== styleGuide.logo ? (
+          <button type="button" className="text-zinc-500" onClick={() => onChange({ ...session, logo: styleGuide.logo })}>
             Use the original logo
           </button>
         ) : null}
@@ -101,7 +100,7 @@ export function ProjectSettings({
         <select
           className="rounded border border-zinc-300 bg-white px-2 py-2"
           value={session.presetId}
-          onChange={(event) => onChange({ ...session, presetId: event.target.value, accent: null, musicId: null })}
+          onChange={(event) => onChange({ ...session, presetId: event.target.value, accent: null })}
         >
           {styleGuide.presets.map((item) => (
             <option key={item.id} value={item.id}>
@@ -121,6 +120,7 @@ export function ProjectSettings({
           value={musicId}
           onChange={(event) => onChange({ ...session, musicId: event.target.value })}
         >
+          <option value={noMusic}>No music</option>
           {styleGuide.music.map((item) => (
             <option key={item.id} value={item.id}>
               {item.title}
@@ -128,6 +128,16 @@ export function ProjectSettings({
           ))}
         </select>
       </label>
+      <button
+        type="button"
+        className="w-fit rounded border border-zinc-300 px-3 py-2"
+        onClick={() => {
+          setNote(null);
+          onChange({ ...defaultSession(styleGuide), wordmark: "", accent: "#ffffff" });
+        }}
+      >
+        Reset all
+      </button>
       {note ? <p className="text-zinc-500">{note}</p> : null}
     </form>
   );

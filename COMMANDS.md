@@ -12,8 +12,15 @@ show_videos wolves
 
 make_cut
 Makes a video from the clips you have selected.
-The length is 8 to 30 seconds. A shorter request is made at 8 seconds.
+The length is whatever you ask for, up to 10 minutes. Every selected clip is used, up to 60.
 make_cut 12
+
+edit_cut
+Opens the editor on the current video. A shot can be trimmed, moved, or removed from here too.
+edit_cut
+edit_cut trim clip=2 edge=end by=-0.5
+edit_cut move from=3 to=1
+edit_cut remove clip=2
 
 project_settings
 Opens the project settings: the property name, logo, where the logo sits, type, and theme.

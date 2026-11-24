@@ -31,7 +31,7 @@ function nextStep(messages: ChatMessage[]) {
       previewAfterBrowser = true;
     }
   }
-  if (previewAfterBrowser) return "Ask for a change, or download the video.";
+  if (previewAfterBrowser) return "Ask for a change, edit the video, or download it.";
   if (sawBrowser && browserSelected > 0) return "Ask for a short cut from the selected clips.";
   if (sawBrowser) return "Select clips, or ask for another search.";
   return "Say yes to see the videos.";
@@ -98,6 +98,30 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
     );
   }
 
+  function setEditing(messageId: string, editing: boolean) {
+    setMessages((current) =>
+      current.map((message) => (message.kind === "preview" && message.id === messageId ? { ...message, editing } : message)),
+    );
+  }
+
+  function undoCut(messageId: string) {
+    setMessages((current) =>
+      current.map((message) => {
+        if (message.kind !== "preview" || message.id !== messageId || !message.prior) return message;
+        return { ...message, plan: message.prior, prior: undefined };
+      }),
+    );
+  }
+
+  function changeCut(messageId: string, next: Plan, remember: boolean) {
+    setMessages((current) =>
+      current.map((message) => {
+        if (message.kind !== "preview" || message.id !== messageId) return message;
+        return { ...message, plan: next, prior: remember ? message.plan : message.prior, editing: true };
+      }),
+    );
+  }
+
   function showPage(messageId: string, query: string, page: number, perPage: number, clips: ChatClip[], total: number) {
     setMessages((current) =>
       current.map((message) => {
@@ -119,10 +143,15 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
     setDraft("");
     setBusy(true);
     const browser = [...history].reverse().find((message) => message.kind === "browser");
+    const openCut = [...history].reverse().find((message) => message.kind === "preview" && message.editing);
+    const latestCut = [...history].reverse().find((message) => message.kind === "preview");
+    const cutMessage = openCut ?? latestCut;
+    const cut = cutMessage?.kind === "preview" ? cutMessage.plan : null;
+    const cutId = cutMessage?.id ?? "";
     const selection: SelectedClip[] = browser
       ? browser.selected.flatMap((id) => {
           const clip = (browser.remembered ?? []).find((item) => item.id === id) ?? browser.clips.find((item) => item.id === id);
-          return clip ? [{ id: clip.id, link: clip.link, author: clip.author, sourcePage: clip.sourcePage, duration: clip.duration }] : [];
+          return clip ? [{ id: clip.id, link: clip.link, author: clip.author, sourcePage: clip.sourcePage, duration: clip.duration, image: clip.image }] : [];
         })
       : [];
     try {
@@ -135,6 +164,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
           messages: history.filter((message) => message.kind === "text").map((message) => ({ role: message.role, text: message.text })),
           selection,
           latestQuery: browser?.query ?? "",
+          cut,
         }),
       });
       const data = (await response.json()) as {
@@ -144,6 +174,8 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
         preview?: Plan;
         settings?: boolean;
         clear?: boolean;
+        editing?: boolean;
+        replace?: boolean;
       };
       if (response.ok && data.clear) {
         clearHistory();
@@ -169,10 +201,19 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
       if (response.ok && data.settings) {
         added.push({ id: crypto.randomUUID(), role: "assistant", kind: "settings" });
       }
-      if (response.ok && data.preview) {
+      if (response.ok && data.preview && !data.replace) {
         added.push({ id: crypto.randomUUID(), role: "assistant", kind: "preview", plan: data.preview });
       }
-      setMessages((current) => [...current, ...added]);
+      setMessages((current) => {
+        const revised = data.replace
+          ? current.map((message) => {
+              if (message.kind !== "preview" || message.id !== cutId) return message;
+              if (!data.preview) return { ...message, editing: true };
+              return { ...message, editing: data.editing ?? true, prior: message.plan, plan: data.preview };
+            })
+          : current;
+        return [...revised, ...added];
+      });
     } catch {
       setMessages((current) => [
         ...current,
@@ -214,9 +255,14 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
               <ChatPreviewView
                 key={message.id}
                 plan={message.plan}
+                editing={message.editing}
+                canUndo={Boolean(message.prior)}
                 titleFont={titleFont}
                 bodyFont={bodyFont}
                 session={brand}
+                onEdit={(editing) => setEditing(message.id, editing)}
+                onUndo={() => undoCut(message.id)}
+                onChange={(next, remember) => changeCut(message.id, next, remember)}
               />
             );
           })}

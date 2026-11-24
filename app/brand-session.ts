@@ -21,7 +21,7 @@ export function saveSession(session: StyleSession) {
 }
 
 export function brandLogo(session: StyleSession) {
-  return session.logo || styleGuide.logo;
+  return session.logo || "";
 }
 
 export function brandName(session: StyleSession) {

@@ -53,11 +53,18 @@ export type StyleSession = {
   logoPlace: LogoPlace;
 };
 
+export const noMusic = "none";
+
+export function sessionTrack(musicId: string | null | undefined) {
+  if (!musicId || musicId === noMusic) return null;
+  return styleGuide.music.find((item) => item.id === musicId) ?? null;
+}
+
 export const defaultSession = (guide: StyleGuide): StyleSession => ({
   presetId: guide.presets[0]?.id ?? "day",
   accent: null,
   titleFont: "display",
-  musicId: null,
+  musicId: noMusic,
   wordmark: guide.name,
   logo: null,
   logoPlace: "top-left",

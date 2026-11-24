@@ -15,6 +15,7 @@ export type SelectedClip = {
   author?: string;
   sourcePage?: string;
   duration: number;
+  image?: string;
 };
 
 export type ChatText = {
@@ -42,6 +43,8 @@ export type ChatPreview = {
   role: "assistant";
   kind: "preview";
   plan: Plan;
+  editing?: boolean;
+  prior?: Plan;
 };
 
 export type ChatSettings = {

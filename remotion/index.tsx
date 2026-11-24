@@ -40,6 +40,7 @@ function Root() {
           1,
           props.clips.reduce((sum, clip) => sum + clip.durationInFrames, 0),
         ),
+        fps: props.fps && props.fps > 0 ? props.fps : 30,
         width: props.width,
         height: props.height,
         props: {

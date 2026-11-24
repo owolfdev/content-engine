@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { splicePreview, type PreviewShot } from "@/lib/quick-preview";
 import type { PlanShape } from "@/lib/plan";
+import { selectionLimit } from "@/lib/chat-cut";
 import { preparePreview, saveSmallProxy } from "@/lib/sources/pexels";
 
 function readShots(value: unknown): PreviewShot[] {
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     const ids = Array.isArray(body.ids) ? body.ids.filter((id): id is string => typeof id === "string" && /^\d+$/.test(id)) : [];
     if (ids.length) {
       const proxies = [];
-      for (const id of ids.slice(0, 6)) proxies.push({ id, url: await saveSmallProxy(id) });
+      for (const id of ids.slice(0, selectionLimit)) proxies.push({ id, url: await saveSmallProxy(id) });
       return Response.json({ proxies }, { headers: { "Cache-Control": "no-store" } });
     }
     const shots = readShots(body.clips);
