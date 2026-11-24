@@ -47,6 +47,7 @@ next-env.d.ts
 # footage masters and search scratch
 /public/library/*.mp4
 /public/library/pexels/
+/public/library/previews/
 /library/thumbs/
 /library/frames/
 /library/candidates.json

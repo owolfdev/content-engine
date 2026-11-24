@@ -32,7 +32,7 @@ export function ChatPreviewView({
       <p className="text-sm text-zinc-700">
         {plan.title}. {rows.length} clip{rows.length === 1 ? "" : "s"}, {stamp(cursor)}.
       </p>
-      <CutPreview plan={plan} titleFont={titleFont} bodyFont={bodyFont} />
+      <CutPreview plan={plan} titleFont={titleFont} bodyFont={bodyFont} quick />
       <ol className="flex flex-col gap-1 text-sm text-zinc-600">
         {rows.map((row) => (
           <li key={row.clip.id}>

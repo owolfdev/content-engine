@@ -1,7 +1,6 @@
-import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
 import { mkdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { runFfmpeg } from "@/lib/ffmpeg";
 import type { LooseShot, PlanShape, RequestReading } from "@/lib/plan";
 
 type PexelsFile = {
@@ -62,30 +61,6 @@ async function download(url: string, dest: string) {
 }
 
 const downloads = new Map<string, Promise<void>>();
-
-function ffmpegCommand() {
-  const dir = path.join(process.cwd(), "node_modules", "@remotion", `compositor-${process.platform}-${process.arch}`);
-  const bin = path.join(dir, "ffmpeg");
-  if (!existsSync(bin)) return { bin: "ffmpeg", env: process.env };
-  return { bin, env: { ...process.env, DYLD_LIBRARY_PATH: dir, LD_LIBRARY_PATH: dir } };
-}
-
-function runFfmpeg(args: string[]) {
-  return new Promise<void>((resolve, reject) => {
-    const command = ffmpegCommand();
-    const child = spawn(command.bin, args, { env: command.env, stdio: ["ignore", "ignore", "pipe"] as const });
-    let stderr = "";
-    child.stderr.setEncoding("utf8");
-    child.stderr.on("data", (chunk: string) => {
-      stderr = (stderr + chunk).slice(-2000);
-    });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(stderr.trim().split("\n").filter(Boolean).at(-1) || "The preview could not be prepared."));
-    });
-  });
-}
 
 async function previewReady(id: string) {
   try {

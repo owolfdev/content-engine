@@ -13,16 +13,25 @@ let rendering = false;
 
 type Stage = "browser" | "bundle" | "open" | "render";
 
-type RenderProgress = {
-  running: boolean;
+type RenderSnapshot = {
   progress: number;
   label: string;
+  remaining: string;
+  frames: string;
 };
 
 const stageRank: Record<Stage, number> = { browser: 0, bundle: 1, open: 2, render: 3 };
 
-let progress: RenderProgress = { running: false, progress: 0, label: "" };
+let snapshot: RenderSnapshot = { progress: 0, label: "", remaining: "", frames: "" };
+let startedAt = 0;
 let seenStage = 0;
+
+function clock(ms: number) {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
 
 function timeLeft(ms: number) {
   const seconds = Math.ceil(ms / 1000);
@@ -32,28 +41,31 @@ function timeLeft(ms: number) {
   return minutes === 1 ? "about 1 min left" : `about ${minutes} min left`;
 }
 
-function describe(stage: Stage, fraction: number, remainingMs: number | null): RenderProgress {
+function liveProgress() {
+  const elapsed = clock(Date.now() - startedAt);
+  const extra = snapshot.remaining || snapshot.frames;
+  return {
+    running: true,
+    progress: snapshot.progress,
+    label: snapshot.label,
+    detail: extra ? `${elapsed} elapsed · ${extra}` : `${elapsed} elapsed`,
+  };
+}
+
+function describe(stage: Stage, fraction: number, remainingMs: number | null, renderedFrames: number | null, totalFrames: number | null): RenderSnapshot {
   const portion = Math.min(1, Math.max(0, fraction));
-  if (stage === "browser") return { running: true, progress: 0.02, label: "Starting · 2%" };
-  if (stage === "bundle") {
-    const value = 0.02 + portion * 0.18;
-    return { running: true, progress: value, label: `Preparing · ${Math.round(value * 100)}%` };
-  }
-  if (stage === "open") return { running: true, progress: 0.2, label: "Opening the cut · 20%" };
+  const frames = renderedFrames != null && totalFrames ? `${renderedFrames} of ${totalFrames} frames` : "";
+  const remaining = remainingMs != null && remainingMs > 0 ? timeLeft(remainingMs) : "";
+  if (stage === "browser") return { progress: 0.02, label: "Starting", remaining: "", frames: "" };
+  if (stage === "bundle") return { progress: 0.02 + portion * 0.18, label: "Preparing", remaining: "", frames: "" };
+  if (stage === "open") return { progress: 0.2, label: "Opening the cut", remaining: "", frames: "" };
   const value = 0.2 + portion * 0.8;
-  const percent = Math.round(value * 100);
-  const label =
-    portion > 0.92 && remainingMs == null
-      ? `Finishing · ${percent}%`
-      : remainingMs == null
-        ? `Making the video · ${percent}%`
-        : `Making the video · ${percent}% · ${timeLeft(remainingMs)}`;
-  return { running: true, progress: value, label };
+  return { progress: value, label: portion > 0.92 && !remaining ? "Finishing" : "Making the video", remaining, frames };
 }
 
 function noteProgress(line: string) {
   if (!line.startsWith("PROGRESS ")) return;
-  let update: { stage?: string; fraction?: number; remainingMs?: number | null };
+  let update: { stage?: string; fraction?: number; remainingMs?: number | null; renderedFrames?: number; totalFrames?: number };
   try {
     update = JSON.parse(line.slice("PROGRESS ".length)) as typeof update;
   } catch {
@@ -63,9 +75,15 @@ function noteProgress(line: string) {
   const rank = stageRank[update.stage];
   if (rank < seenStage) return;
   seenStage = rank;
-  const next = describe(update.stage, update.fraction ?? 0, typeof update.remainingMs === "number" ? update.remainingMs : null);
-  if (next.progress < progress.progress) return;
-  progress = next;
+  const next = describe(
+    update.stage,
+    update.fraction ?? 0,
+    typeof update.remainingMs === "number" ? update.remainingMs : null,
+    typeof update.renderedFrames === "number" ? update.renderedFrames : null,
+    typeof update.totalFrames === "number" ? update.totalFrames : null,
+  );
+  if (next.progress < snapshot.progress) return;
+  snapshot = next;
 }
 
 function allowedFile(file: string) {
@@ -155,7 +173,8 @@ export async function POST(request: Request) {
 
   rendering = true;
   seenStage = 0;
-  progress = { running: true, progress: 0.02, label: "Starting · 2%" };
+  startedAt = Date.now();
+  snapshot = { progress: 0.02, label: "Starting", remaining: "", frames: "" };
   const output = path.join(os.tmpdir(), `palm-shore-${Date.now()}.mp4`);
   try {
     await renderOnThisComputer(plan, output);
@@ -175,7 +194,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "The video could not be made. Try again in a moment." }, { status: 500 });
   } finally {
     rendering = false;
-    progress = { running: false, progress: 0, label: "" };
+    snapshot = { progress: 0, label: "", remaining: "", frames: "" };
     await unlink(output).catch(() => undefined);
     await unlink(`${output}.voice`).catch(() => undefined);
   }
@@ -183,7 +202,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   await connection();
-  return Response.json(rendering ? progress : { running: false, progress: 0, label: "" }, {
+  return Response.json(rendering ? liveProgress() : { running: false, progress: 0, label: "", detail: "" }, {
     headers: { "Cache-Control": "no-store" },
   });
 }

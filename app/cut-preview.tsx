@@ -24,30 +24,46 @@ export function CutPreview({
   plan,
   titleFont,
   bodyFont,
+  quick = false,
 }: {
   plan: Plan;
   titleFont: string;
   bodyFont: string;
+  quick?: boolean;
 }) {
   const [shape, setShape] = useState<PlanShape>(plan.shape);
   const [previewReady, setPreviewReady] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewProblem, setPreviewProblem] = useState<string | null>(null);
   const recording = savedVoice(plan.spokenLine);
-  const clipFiles = plan.clips.map((clip) => clip.file).join("|");
+  const clipFiles = plan.clips.map((clip) => `${clip.file}@${clip.start}-${clip.end}`).join("|");
 
   useEffect(() => {
     let active = true;
     setPreviewReady(false);
+    setPreviewUrl(null);
     setPreviewProblem(null);
+    const clips = plan.clips.map((clip) => ({ file: clip.file, start: clip.start, end: clip.end }));
+    const music = styleGuide.music.find((item) => item.id === plan.musicId)?.file ?? null;
+    const payload = quick ? { clips, shape, music } : { files: plan.clips.map((clip) => clip.file) };
     fetch("/api/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ files: clipFiles.split("|").filter(Boolean) }),
+      body: JSON.stringify(payload),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (!active) return;
-        if (!response.ok) setPreviewProblem("The preview could not be prepared.");
-        else setPreviewReady(true);
+        if (!response.ok) {
+          setPreviewProblem("The preview could not be prepared.");
+          return;
+        }
+        const data = (await response.json()) as { url?: string };
+        if (quick && !data.url) {
+          setPreviewProblem("The preview could not be prepared.");
+          return;
+        }
+        if (data.url) setPreviewUrl(data.url);
+        setPreviewReady(true);
       })
       .catch(() => {
         if (active) setPreviewProblem("The preview could not be prepared.");
@@ -55,7 +71,7 @@ export function CutPreview({
     return () => {
       active = false;
     };
-  }, [clipFiles]);
+  }, [clipFiles, plan.clips, plan.musicId, quick, shape]);
 
   useEffect(() => {
     setShape(plan.shape);
@@ -115,8 +131,20 @@ export function CutPreview({
         <p className="text-zinc-500">This preview is silent.</p>
       ) : null}
       {previewProblem ? <p className="text-zinc-500">{previewProblem}</p> : null}
-      {previewReady ? null : previewProblem ? null : <p className="text-zinc-500">Preparing the preview…</p>}
-      {previewReady ? (
+      {previewReady ? null : previewProblem ? null : (
+        <p className="text-zinc-500">{quick ? "Preparing a quick preview…" : "Preparing the preview…"}</p>
+      )}
+      {quick && previewUrl ? (
+        <video
+          key={previewUrl}
+          src={previewUrl}
+          controls
+          playsInline
+          className="bg-black"
+          style={{ width: displayWidth, maxWidth: "100%" }}
+        />
+      ) : null}
+      {!quick && previewReady ? (
         <Player
           component={Cut}
           inputProps={inputProps}
@@ -131,6 +159,7 @@ export function CutPreview({
       ) : null}
       <p className="text-zinc-500">
         {seconds.toFixed(0)} seconds. The picture fills the frame.
+        {quick ? " The finished video adds the title and logo." : ""}
         {recording ? " The music dips while the voice speaks." : ""}
       </p>
     </div>

@@ -18,7 +18,13 @@ if (!planPath || !output) {
 
 let bundled: Promise<string> | null = null;
 
-function report(update: { stage: "browser" | "bundle" | "open" | "render"; fraction?: number; remainingMs?: number | null }) {
+function report(update: {
+  stage: "browser" | "bundle" | "open" | "render";
+  fraction?: number;
+  remainingMs?: number | null;
+  renderedFrames?: number;
+  totalFrames?: number;
+}) {
   writeSync(1, `PROGRESS ${JSON.stringify(update)}\n`);
 }
 
@@ -106,7 +112,9 @@ try {
       report({
         stage: "render",
         fraction: update.progress,
-        remainingMs: update.renderedFrames >= 10 && update.renderEstimatedTime > 0 ? update.renderEstimatedTime : null,
+        remainingMs: update.renderedFrames >= 8 && update.renderEstimatedTime > 0 ? update.renderEstimatedTime : null,
+        renderedFrames: update.renderedFrames,
+        totalFrames: composition.durationInFrames,
       });
     },
   });

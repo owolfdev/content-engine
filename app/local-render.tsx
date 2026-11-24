@@ -7,6 +7,7 @@ type RenderProgress = {
   running: boolean;
   progress: number;
   label: string;
+  detail: string;
 };
 
 export function LocalRender({ plan }: { plan: Plan }) {
@@ -90,21 +91,21 @@ export function LocalRender({ plan }: { plan: Plan }) {
         {busy ? "Making the video…" : "Download video"}
       </button>
       {busy ? <RenderBar progress={progress} /> : null}
-      <p className="text-sm text-zinc-500">This takes about a minute. The video downloads when it is ready.</p>
       {message ? <p className="text-sm text-zinc-700">{message}</p> : null}
     </div>
   );
 }
 
 function RenderBar({ progress }: { progress: RenderProgress | null }) {
-  const shown = progress ?? { running: true, progress: 0.02, label: "Starting · 2%" };
+  const shown = progress ?? { running: true, progress: 0.02, label: "Starting", detail: "0:00 elapsed" };
   const percent = Math.max(0, Math.min(100, Math.round(shown.progress * 100)));
+  const status = `${shown.label} · ${percent}%${shown.detail ? ` · ${shown.detail}` : ""}`;
   return (
-    <div className="flex w-full max-w-md flex-col gap-1" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} aria-label={shown.label}>
+    <div className="flex w-full max-w-md flex-col gap-1" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} aria-label={status}>
       <div className="h-1.5 overflow-hidden rounded bg-zinc-200">
         <div className="h-full bg-zinc-800 transition-[width] duration-300" style={{ width: `${percent}%` }} />
       </div>
-      <p className="text-sm text-zinc-500">{shown.label}</p>
+      <p className="text-sm text-zinc-500">{status}</p>
     </div>
   );
 }
