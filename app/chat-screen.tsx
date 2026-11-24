@@ -115,6 +115,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
+        signal: AbortSignal.timeout(45_000),
         body: JSON.stringify({
           messages: history.filter((message) => message.kind === "text").map((message) => ({ role: message.role, text: message.text })),
           selection,

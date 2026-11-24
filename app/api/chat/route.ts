@@ -23,7 +23,7 @@ Call a tool before you state a count, show footage, or assemble a cut. Then repl
 
 Rules:
 - count_videos before you say how many videos match. Repeat the subject in that reply, and ask if they want to see them.
-- show_videos only after they agree to look, or if they asked to see the footage in the same message. The browser appears with that reply, so do not ask whether to show it.
+- show_videos only after they agree to look, or if they asked to see the footage in the same message. The gallery appears only when you call show_videos. Do not say the videos are on screen unless you called it in this turn. If they say they cannot see the videos, call show_videos again. Do not assemble a cut then.
 - make_cut uses the clips already selected in the browser. If none are selected, ask them to select some. Do not invent a selection. The preview appears with that reply, so do not ask whether to preview it.
 - A cut is 8 to 30 seconds. If they ask for longer, say so and make 30 seconds.
 - Do not offer to record a voiceover. The preview is silent.
@@ -106,6 +106,27 @@ function readSelection(value: unknown): SelectedClip[] {
   }).slice(0, 6);
 }
 
+const bareAgreement = /^(yes|yeah|yep|yup|sure|ok|okay|please|show them|show me)[.!?\s]*$/i;
+
+function wantsFootage(text: string) {
+  return bareAgreement.test(text) || /\b(show|see|videos?|clips?|footage|cannot see|can't see)\b/i.test(text);
+}
+
+function phraseFrom(history: { role: string; content: string }[]) {
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    if (history[index]?.role !== "user") continue;
+    const text = history[index]?.content.trim() ?? "";
+    if (!text || bareAgreement.test(text)) continue;
+    const phrase = text
+      .replace(/\b(please|show|me|some|videos?|of|about|the|a|an|footage|clips?|imagery|there|are|how|many|do|we|have|you|i|cannot|can't|see|them|not|provided|component)\b/gi, " ")
+      .replace(/[^a-z0-9\s-]/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (phrase) return phrase.slice(0, 80);
+  }
+  return "";
+}
+
 function argumentsOf(call: ToolCall) {
   try {
     const parsed = JSON.parse(call.function.arguments) as { query?: unknown; seconds?: unknown; title?: unknown };
@@ -125,6 +146,7 @@ async function complete(key: string, model: string, messages: ModelMessage[]) {
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({ model, messages, tools, temperature: 0.2 }),
     cache: "no-store",
+    signal: AbortSignal.timeout(25_000),
   });
   const body = (await response.json().catch(() => null)) as {
     error?: { message?: string };
@@ -214,9 +236,17 @@ export async function POST(request: Request) {
         messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(forModel) });
       }
     }
+    if (!browser && wantsFootage(history.at(-1)?.content ?? "")) {
+      const query = phraseFrom(history);
+      if (query) {
+        const found = await browsePexels(query);
+        browser = { query, total: found.total, clips: found.clips };
+      }
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    const guest = message && !/pexels|openai|api|key|env|server|model/i.test(message) ? message : "The reply did not come back.";
+    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+    const guest = !timedOut && message && !/pexels|openai|api|key|env|server|model/i.test(message) ? message : "The reply did not come back.";
     return Response.json({ error: guest }, { status: 502 });
   }
 

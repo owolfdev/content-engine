@@ -54,7 +54,7 @@ async function cached(id: string) {
 }
 
 async function download(url: string, dest: string) {
-  const response = await fetch(url, { headers: { "User-Agent": "content-engine" } });
+  const response = await fetch(url, { headers: { "User-Agent": "content-engine" }, signal: AbortSignal.timeout(45_000) });
   if (!response.ok) {
     throw new Error(`Pexels file download failed (${response.status}).`);
   }
@@ -136,7 +136,6 @@ async function ensureFile(id: string, link: string) {
   const task = (async () => {
     await mkdir(cacheDir, { recursive: true });
     if (!(await cached(id))) await download(link, path.join(cacheDir, `${id}.mp4`));
-    await ensurePreview(id);
   })().finally(() => {
     downloads.delete(id);
   });
@@ -163,6 +162,7 @@ export async function searchPexels(
   const response = await fetch(endpoint, {
     headers: { Authorization: key, "User-Agent": "content-engine" },
     cache: "no-store",
+    signal: AbortSignal.timeout(20_000),
   });
   if (response.status === 401 || response.status === 403) {
     throw new Error("Pexels rejected the key.");
@@ -247,6 +247,7 @@ async function readPage(phrase: string, shape: PlanShape, page: number, perPage 
   const response = await fetch(endpoint, {
     headers: { Authorization: key, "User-Agent": "content-engine" },
     cache: "no-store",
+    signal: AbortSignal.timeout(20_000),
   });
   if (response.status === 401 || response.status === 403) {
     throw new Error("Pexels rejected the key.");
