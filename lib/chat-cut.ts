@@ -34,7 +34,7 @@ export async function cutFromSelection(selection: SelectedClip[], seconds: numbe
   });
   const script = draftScript(`${duration} second ${query || title || "beach"}`, "pexels");
   script.duration = duration;
-  script.title = title.trim() || titleCase(query) || script.title || "Palm Shore";
+  script.title = title.trim() || titleCase(query) || script.title || "Video";
   script.spokenLine = "";
   script.beats = shots.map((shot, index) => ({
     id: `beat-${index + 1}`,

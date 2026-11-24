@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Plan } from "@/lib/plan";
+import { videoFileName } from "@/lib/style";
 
 type RenderProgress = {
   running: boolean;
@@ -46,11 +47,13 @@ export function LocalRender({ plan }: { plan: Plan }) {
     };
   }, [busy]);
 
+  const fileName = videoFileName(plan.graphics?.wordmark ?? "");
+
   function saveBlob(blob: Blob) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "palm-shore.mp4";
+    link.download = fileName;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -58,7 +61,7 @@ export function LocalRender({ plan }: { plan: Plan }) {
   async function renderFile() {
     if (fileRef.current) {
       saveBlob(fileRef.current);
-      setMessage("Downloaded palm-shore.mp4.");
+      setMessage(`Downloaded ${fileName}.`);
       return;
     }
     setBusy(true);
@@ -85,7 +88,7 @@ export function LocalRender({ plan }: { plan: Plan }) {
       fileRef.current = blob;
       saveBlob(blob);
       const voice = response.headers.get("x-render-voice");
-      setMessage(voice === "saved-take" ? "Downloaded palm-shore.mp4, with the saved voice take." : "Downloaded palm-shore.mp4.");
+      setMessage(voice === "saved-take" ? `Downloaded ${fileName}, with the saved voice take.` : `Downloaded ${fileName}.`);
     } catch {
       setMessage("The video could not be made.");
     } finally {

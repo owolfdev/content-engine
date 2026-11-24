@@ -26,7 +26,7 @@ export function renderCutProps(plan: Plan, voice: { src: string; seconds: number
     })),
     title: plan.title,
     spokenLine: plan.spokenLine,
-    wordmark: plan.graphics?.wordmark || styleGuide.name,
+    wordmark: plan.graphics?.wordmark ?? styleGuide.name,
     logo: plan.graphics?.logo ?? styleGuide.logo,
     logoPlace: plan.graphics?.logoPlace || "top-left",
     music: music?.file ?? null,

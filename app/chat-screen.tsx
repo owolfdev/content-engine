@@ -75,6 +75,10 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
     wasBusy.current = busy;
   }, [busy]);
 
+  useEffect(() => {
+    document.title = session?.wordmark.trim() || "Video";
+  }, [session]);
+
   function updateSession(next: StyleSession) {
     setSession(next);
     saveSession(next);
@@ -165,6 +169,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
           selection,
           latestQuery: browser?.query ?? "",
           cut,
+          wordmark: session?.wordmark ?? "",
         }),
       });
       const data = (await response.json()) as {

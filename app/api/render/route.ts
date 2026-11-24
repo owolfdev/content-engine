@@ -5,6 +5,7 @@ import path from "node:path";
 import { connection } from "next/server";
 import type { Plan } from "@/lib/plan";
 import { saveMaster } from "@/lib/sources/pexels";
+import { videoFileName } from "@/lib/style";
 
 // Local only. Remotion's Chrome closes when this runs inside the Next.js server,
 // so the route hands the plan to a separate process. A deployed site needs a different path.
@@ -190,7 +191,7 @@ export async function POST(request: Request) {
     return new Response(file, {
       headers: {
         "Content-Type": "video/mp4",
-        "Content-Disposition": 'attachment; filename="palm-shore.mp4"',
+        "Content-Disposition": `attachment; filename="${videoFileName(plan.graphics?.wordmark ?? "")}"`,
         "Cache-Control": "no-store",
         "x-render-voice": voice.trim() === "saved-take" ? "saved-take" : "none",
       },

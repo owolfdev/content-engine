@@ -17,7 +17,7 @@ type ModelMessage = {
   tool_call_id?: string;
 };
 
-const instructions = `You are the Palm Shore editor helping a guest make a short video from the resort footage.
+const instructions = `You are the editor helping a guest make a short video from the footage.
 
 The guest normally writes in ordinary language. Read what they mean and call one command. The app runs only that command, with the arguments you pass. It does not turn their sentence into a search. After the command result, reply in one or two plain sentences.
 
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
   await connection();
   const key = process.env.OPENAI_API_KEY;
 
-  let payload: { messages?: unknown; selection?: unknown; latestQuery?: unknown; cut?: unknown } = {};
+  let payload: { messages?: unknown; selection?: unknown; latestQuery?: unknown; cut?: unknown; wordmark?: unknown } = {};
   try {
     payload = (await request.json()) as typeof payload;
   } catch {
@@ -141,7 +141,9 @@ export async function POST(request: Request) {
   const selection = readSelection(payload.selection);
   const latestQuery = typeof payload.latestQuery === "string" ? payload.latestQuery.trim().slice(0, 80) : "";
   const cut = readCut(payload.cut);
+  const wordmark = typeof payload.wordmark === "string" ? payload.wordmark.trim().slice(0, 80) : "";
   const context = [
+    wordmark ? `The property is called "${wordmark}". Use that name.` : "No property name is set. Do not invent one.",
     latestQuery
       ? `The browser on screen searched for "${latestQuery}". ${selection.length} clip${selection.length === 1 ? " is" : "s are"} selected.`
       : selection.length

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Palm Shore",
-  description: "Make a short film from Palm Shore footage.",
+  title: "Video",
+  description: "Make a short video from footage.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

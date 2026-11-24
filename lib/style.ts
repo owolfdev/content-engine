@@ -53,6 +53,18 @@ export type StyleSession = {
   logoPlace: LogoPlace;
 };
 
+export function videoFileName(wordmark: string) {
+  const slug = wordmark
+    .trim()
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return `${slug || "video"}.mp4`;
+}
+
 export const noMusic = "none";
 
 export function sessionTrack(musicId: string | null | undefined) {

@@ -25,5 +25,5 @@ export function brandLogo(session: StyleSession) {
 }
 
 export function brandName(session: StyleSession) {
-  return session.wordmark.trim() || styleGuide.name;
+  return session.wordmark.trim();
 }
