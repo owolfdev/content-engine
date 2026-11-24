@@ -1,8 +1,7 @@
 import { connection } from "next/server";
-import type { ChatClip, SelectedClip } from "@/lib/chat";
-import { cutFromSelection } from "@/lib/chat-cut";
+import type { SelectedClip } from "@/lib/chat";
+import { parseDirect, runCommand, tools, type Gallery } from "@/lib/commands";
 import type { Plan } from "@/lib/plan";
-import { browsePexels, countPexels } from "@/lib/sources/pexels";
 
 type ToolCall = {
   id: string;
@@ -19,64 +18,17 @@ type ModelMessage = {
 
 const instructions = `You are the Palm Shore editor helping a guest make a short video from the resort footage.
 
-Call a tool before you state a count, show footage, or assemble a cut. Then reply in one or two plain sentences. Speak as if you are talking to a guest. Do not mention tools, software, stock sites, servers, files, or how the app is built.
+The guest normally writes in ordinary language. Read what they mean and call one command. The app runs only that command, with the arguments you pass. It does not turn their sentence into a search. After the command result, reply in one or two plain sentences.
 
-Rules:
-- count_videos before you say how many videos match. Repeat the subject in that reply, and ask if they want to see them.
-- show_videos only after they agree to look, or if they asked to see the footage in the same message. The gallery appears only when you call show_videos. Do not say the videos are on screen unless you called it in this turn. If they say they cannot see the videos, call show_videos again. Do not assemble a cut then.
-- make_cut uses the clips already selected in the browser. If none are selected, ask them to select some. Do not invent a selection. The preview appears with that reply, so do not ask whether to preview it.
-- A cut is 8 to 30 seconds. If they ask for longer, say so and make 30 seconds.
-- Do not offer to record a voiceover. The preview is silent.
-- Use the latest search phrase when they say yes, sure, or show me.`;
+If they ask which commands exist, how to type a command, or for help, call commands. The documentation in that result is the whole reply. Show it unchanged.
 
-const tools = [
-  {
-    type: "function",
-    function: {
-      name: "count_videos",
-      description: "Count videos that match a short search phrase.",
-      parameters: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          query: { type: "string", description: "Search phrase, such as beach or pool at sunset." },
-        },
-        required: ["query"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "show_videos",
-      description: "Show a browser of videos for a search phrase.",
-      parameters: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          query: { type: "string" },
-        },
-        required: ["query"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "make_cut",
-      description: "Assemble a short preview from the clips the user selected.",
-      parameters: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          seconds: { type: "number", description: "Length from 8 to 30 seconds." },
-          title: { type: "string", description: "Short title burned into the preview." },
-        },
-        required: ["seconds"],
-      },
-    },
-  },
-];
+Otherwise interpret their intention:
+- count_videos when they ask how many videos match a subject, or name a new subject. query is only the subject, a few words, such as crows. Then ask if they want to see them.
+- show_videos when they ask to see footage, agree to look, or say the videos are not on screen. query is the subject. The gallery appears only because this command ran. Do not say the videos are on screen unless this command ran in this turn.
+- make_cut when they ask to make a video from the clips already selected. seconds is the length they asked for. If they ask for fewer than 8 seconds, pass 8 and say the shortest cut is 8 seconds. If they ask for more than 30, pass 30 and say so. The preview appears with that reply, so do not ask for permission again. If none are selected, ask them to select clips in the gallery already on screen. Do not open a new search.
+
+Do not mention commands, software, stock sites, servers, files, or how the app is built unless they asked to see the commands.
+Do not offer to record a voiceover. The preview is silent.`;
 
 function readMessages(value: unknown) {
   if (!Array.isArray(value)) return [];
@@ -104,27 +56,6 @@ function readSelection(value: unknown): SelectedClip[] {
       duration: Number(clip.duration) || 8,
     }];
   }).slice(0, 6);
-}
-
-const bareAgreement = /^(yes|yeah|yep|yup|sure|ok|okay|please|show them|show me)[.!?\s]*$/i;
-
-function wantsFootage(text: string) {
-  return bareAgreement.test(text) || /\b(show|see|videos?|clips?|footage|cannot see|can't see)\b/i.test(text);
-}
-
-function phraseFrom(history: { role: string; content: string }[]) {
-  for (let index = history.length - 1; index >= 0; index -= 1) {
-    if (history[index]?.role !== "user") continue;
-    const text = history[index]?.content.trim() ?? "";
-    if (!text || bareAgreement.test(text)) continue;
-    const phrase = text
-      .replace(/\b(please|show|me|some|videos?|of|about|the|a|an|footage|clips?|imagery|there|are|how|many|do|we|have|you|i|cannot|can't|see|them|not|provided|component)\b/gi, " ")
-      .replace(/[^a-z0-9\s-]/gi, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (phrase) return phrase.slice(0, 80);
-  }
-  return "";
 }
 
 function argumentsOf(call: ToolCall) {
@@ -160,12 +91,15 @@ async function complete(key: string, model: string, messages: ModelMessage[]) {
   return message;
 }
 
+function guestMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+  return !timedOut && message && !/pexels|openai|api|key|env|server|model/i.test(message) ? message : "The reply did not come back.";
+}
+
 export async function POST(request: Request) {
   await connection();
   const key = process.env.OPENAI_API_KEY;
-  if (!key) {
-    return Response.json({ error: "The assistant is unavailable right now." }, { status: 503 });
-  }
 
   let payload: { messages?: unknown; selection?: unknown; latestQuery?: unknown } = {};
   try {
@@ -185,12 +119,27 @@ export async function POST(request: Request) {
       ? `${selection.length} clips are selected.`
       : "No browser is open and no clips are selected.";
 
+  const commandContext = { selection, latestQuery };
+  const direct = parseDirect(history.at(-1)?.content ?? "");
+  if (direct) {
+    if ("error" in direct) return Response.json({ reply: direct.error, browser: null, preview: null });
+    try {
+      const effect = await runCommand(direct.name, direct.args, commandContext, "direct");
+      return Response.json({ reply: effect.reply, browser: effect.browser, preview: effect.preview });
+    } catch (error) {
+      return Response.json({ error: guestMessage(error) }, { status: 502 });
+    }
+  }
+  if (!key) {
+    return Response.json({ error: "The assistant is unavailable right now." }, { status: 503 });
+  }
+
   const messages: ModelMessage[] = [
     { role: "system", content: `${instructions}\n\n${context}` },
     ...history,
   ];
   const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
-  let browser: { query: string; total: number; clips: ChatClip[] } | null = null;
+  let browser: Gallery | null = null;
   let preview: Plan | null = null;
   let reply = "";
 
@@ -203,51 +152,22 @@ export async function POST(request: Request) {
         break;
       }
       messages.push({ role: "assistant", content: message.content ?? "", tool_calls: calls });
+      let showGuide = false;
       for (const call of calls) {
         const args = argumentsOf(call);
-        let forModel: unknown = { error: "That action is not available." };
-        if (call.function.name === "count_videos") {
-          const total = args.query ? await countPexels(args.query) : 0;
-          forModel = args.query ? { query: args.query, total } : { error: "A search phrase is required." };
-        } else if (call.function.name === "show_videos") {
-          if (!args.query) {
-            forModel = { error: "A search phrase is required." };
-          } else {
-            const found = await browsePexels(args.query);
-            browser = { query: args.query, total: found.total, clips: found.clips };
-            forModel = { query: args.query, total: found.total, showing: found.clips.length };
-          }
-        } else if (call.function.name === "make_cut") {
-          if (!selection.length) {
-            forModel = { made: false, error: "No clips are selected." };
-          } else {
-            const seconds = Math.min(30, Math.max(8, Math.round(args.seconds) || 12));
-            preview = await cutFromSelection(selection, seconds, args.title, latestQuery);
-            const shortened = Number.isFinite(args.seconds) && args.seconds > 30;
-            forModel = {
-              made: true,
-              seconds: preview.duration,
-              clips: preview.clips.length,
-              title: preview.title,
-              note: shortened ? "The request was longer than 30 seconds, so the cut is 30 seconds." : "",
-            };
-          }
+        const effect = await runCommand(call.function.name, { query: args.query, seconds: args.seconds, title: args.title }, commandContext, "model");
+        if (effect.browser) browser = effect.browser;
+        if (effect.preview) preview = effect.preview;
+        if (call.function.name === "commands") {
+          reply = effect.reply;
+          showGuide = true;
         }
-        messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(forModel) });
+        messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(effect.forModel) });
       }
-    }
-    if (!browser && wantsFootage(history.at(-1)?.content ?? "")) {
-      const query = phraseFrom(history);
-      if (query) {
-        const found = await browsePexels(query);
-        browser = { query, total: found.total, clips: found.clips };
-      }
+      if (showGuide) break;
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-    const guest = !timedOut && message && !/pexels|openai|api|key|env|server|model/i.test(message) ? message : "The reply did not come back.";
-    return Response.json({ error: guest }, { status: 502 });
+    return Response.json({ error: guestMessage(error) }, { status: 502 });
   }
 
   return Response.json({

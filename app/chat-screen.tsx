@@ -131,6 +131,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
       const reply = data.reply || data.error || "The reply did not come back.";
       const added: ChatMessage[] = [{ id: crypto.randomUUID(), role: "assistant", kind: "text", text: reply }];
       if (response.ok && data.browser) {
+        const previous = [...history].reverse().find((message) => message.kind === "browser");
         added.push({
           id: crypto.randomUUID(),
           role: "assistant",
@@ -138,7 +139,8 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
           query: data.browser.query,
           total: data.browser.total,
           clips: data.browser.clips,
-          selected: [],
+          selected: previous?.selected ?? [],
+          remembered: previous?.remembered ?? [],
           page: 1,
           perPage: 12,
         });

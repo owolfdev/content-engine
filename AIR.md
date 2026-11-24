@@ -96,7 +96,7 @@ Clip paths in a render must start with `/library/` or `/brand/` and must not con
 
 ## Chat behavior worth keeping
 
-The model may call `count_videos`, `show_videos`, and `make_cut`. It does not draw the interface. A count stays as words. The gallery appears when the person wants to see footage. The preview appears when they ask for a cut from the selection.
+Ordinary language is interpreted into one command. The commands are `count_videos`, `show_videos`, `make_cut`, and `commands`. A message that is itself a command, such as `make_cut 12`, runs directly. When the guest asks which commands exist, the reply is the text in `COMMANDS.md`. The model does not draw the interface. A count stays as words. The gallery appears when they want to see footage. The preview appears when they ask for a cut from the selection.
 
 The gallery search box starts with the model’s phrase. Editing it searches again and keeps the selection. Selected clips stay in the strip under the grid, including after a new search or another page. The prompt takes the cursor again after each reply.
 
