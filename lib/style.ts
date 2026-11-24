@@ -39,12 +39,18 @@ export type StyleGuide = {
 
 export const styleGuide = guide as StyleGuide;
 
+export const logoPlaces = ["top-left", "top-right", "bottom-left", "bottom-right"] as const;
+
+export type LogoPlace = (typeof logoPlaces)[number];
+
 export type StyleSession = {
   presetId: string;
   accent: string | null;
   titleFont: "display" | "body";
   musicId: string | null;
   wordmark: string;
+  logo: string | null;
+  logoPlace: LogoPlace;
 };
 
 export const defaultSession = (guide: StyleGuide): StyleSession => ({
@@ -53,4 +59,6 @@ export const defaultSession = (guide: StyleGuide): StyleSession => ({
   titleFont: "display",
   musicId: null,
   wordmark: guide.name,
+  logo: null,
+  logoPlace: "top-left",
 });

@@ -21,11 +21,13 @@ export type CommandEffect = {
   reply: string;
   browser: Gallery | null;
   preview: Plan | null;
+  settings: boolean;
+  clear: boolean;
 };
 
 type CommandArgs = Record<string, string | number>;
 
-const commandNames = ["count_videos", "show_videos", "make_cut", "commands"] as const;
+const commandNames = ["count_videos", "show_videos", "make_cut", "project_settings", "clear_history", "commands"] as const;
 
 type CommandName = (typeof commandNames)[number];
 
@@ -79,6 +81,22 @@ export const tools = [
   {
     type: "function",
     function: {
+      name: "project_settings",
+      description: "Open the project settings panel. Use this when the guest wants to change the project, brand, logo, logo placement, fonts, or theme.",
+      parameters: { type: "object", additionalProperties: false, properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "clear_history",
+      description: "Clear the conversation. Use this only when the guest asks to clear, reset, or delete the chat history.",
+      parameters: { type: "object", additionalProperties: false, properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "commands",
       description: "Return the command list. Use this when the guest asks which commands exist, how to type one, or for help.",
       parameters: { type: "object", additionalProperties: false, properties: {}, required: [] },
@@ -115,8 +133,8 @@ export function parseDirect(text: string): { error: string } | { name: CommandNa
   const name = match[1].toLowerCase();
   if (!isCommand(name)) return null;
   const rest = (match[2] ?? "").trim();
-  if (name === "commands") {
-    return rest ? { error: "commands is typed on its own." } : { name, args: {} };
+  if (name === "commands" || name === "project_settings" || name === "clear_history") {
+    return rest ? { error: `${name} is typed on its own.` } : { name, args: {} };
   }
   if (name === "count_videos" || name === "show_videos") {
     const query = (namedValue(rest, "query") ?? rest).trim().replace(/\s+/g, " ").slice(0, 80);
@@ -132,7 +150,13 @@ export function parseDirect(text: string): { error: string } | { name: CommandNa
 export async function runCommand(name: string, args: CommandArgs, context: CommandContext, source: "model" | "direct"): Promise<CommandEffect> {
   if (name === "commands") {
     const reply = commandGuide();
-    return { forModel: { documentation: reply }, reply, browser: null, preview: null };
+    return { forModel: { documentation: reply }, reply, browser: null, preview: null, settings: false, clear: false };
+  }
+  if (name === "project_settings") {
+    return { forModel: { opened: true }, reply: "Here are the project settings.", browser: null, preview: null, settings: true, clear: false };
+  }
+  if (name === "clear_history") {
+    return { forModel: { cleared: true }, reply: "", browser: null, preview: null, settings: false, clear: true };
   }
   if (name === "count_videos" || name === "show_videos") {
     const raw = typeof args.query === "string" ? args.query : "";
@@ -143,6 +167,8 @@ export async function runCommand(name: string, args: CommandArgs, context: Comma
         reply: "That needs a short subject, such as wolves.",
         browser: null,
         preview: null,
+        settings: false,
+        clear: false,
       };
     }
     if (name === "count_videos") {
@@ -152,6 +178,8 @@ export async function runCommand(name: string, args: CommandArgs, context: Comma
         reply: `There are ${total.toLocaleString("en-US")} videos about ${query}. Would you like to see them?`,
         browser: null,
         preview: null,
+        settings: false,
+        clear: false,
       };
     }
     const found = await browsePexels(query);
@@ -160,12 +188,14 @@ export async function runCommand(name: string, args: CommandArgs, context: Comma
       reply: `Here are some ${query} videos. Select the clips you want to use.`,
       browser: { query, total: found.total, clips: found.clips },
       preview: null,
+      settings: false,
+      clear: false,
     };
   }
   if (name === "make_cut") {
     const asked = Number(args.seconds);
     if (!Number.isFinite(asked)) {
-      return { forModel: { made: false, error: "Pass the length in seconds." }, reply: "A length is needed, from 8 to 30 seconds.", browser: null, preview: null };
+      return { forModel: { made: false, error: "Pass the length in seconds." }, reply: "A length is needed, from 8 to 30 seconds.", browser: null, preview: null, settings: false, clear: false };
     }
     if (!context.selection.length) {
       return {
@@ -173,6 +203,8 @@ export async function runCommand(name: string, args: CommandArgs, context: Comma
         reply: "Select a few clips first.",
         browser: null,
         preview: null,
+        settings: false,
+        clear: false,
       };
     }
     const seconds = Math.min(30, Math.max(8, Math.round(asked)));
@@ -184,7 +216,7 @@ export async function runCommand(name: string, args: CommandArgs, context: Comma
       : asked > 30
         ? "The longest video is 30 seconds. Here it is, made from the selected clips."
         : `Here is a ${preview.duration} second video from the selected clips.`;
-    return { forModel: { made: true, seconds: preview.duration, clips: preview.clips.length, title: preview.title, note }, reply, browser: null, preview };
+    return { forModel: { made: true, seconds: preview.duration, clips: preview.clips.length, title: preview.title, note }, reply, browser: null, preview, settings: false, clear: false };
   }
-  return { forModel: { error: "That action is not available." }, reply: "That action is not available.", browser: null, preview: null };
+  return { forModel: { error: "That action is not available." }, reply: "That action is not available.", browser: null, preview: null, settings: false, clear: false };
 }

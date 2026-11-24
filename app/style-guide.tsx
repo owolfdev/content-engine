@@ -123,6 +123,32 @@ export function StyleGuidePreview({
           </label>
 
           <label className="flex flex-col gap-1">
+            Logo
+            <input
+              type="file"
+              accept="image/svg+xml,image/png,image/jpeg,image/webp"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (!file) return;
+                if (file.size > 1_500_000) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const value = typeof reader.result === "string" ? reader.result : "";
+                  if (!value.startsWith("data:image/")) return;
+                  setSession((current) => ({ ...current, logo: value }));
+                };
+                reader.readAsDataURL(file);
+              }}
+            />
+            {session.logo ? (
+              <button type="button" className="text-left text-zinc-500" onClick={() => setSession((current) => ({ ...current, logo: null }))}>
+                Use the original logo
+              </button>
+            ) : null}
+          </label>
+
+          <label className="flex flex-col gap-1">
             Wordmark
             <input
               className="rounded border border-zinc-300 px-2 py-2"
@@ -165,7 +191,7 @@ export function StyleGuidePreview({
         <section className="flex min-w-0 flex-col gap-4" aria-label="Brand preview">
           <div className="aspect-video overflow-hidden rounded-md" style={frameStyle}>
             <div className="flex h-full min-w-0 flex-col justify-between">
-              <img src={guide.logo} alt="" className="h-10 w-10" />
+              <img src={session.logo || guide.logo} alt="" className="h-10 w-10" />
               <div className="min-w-0">
                 <p className="text-sm tracking-wide" style={{ color: colors.accent, fontFamily: bodyFont }}>
                   {session.wordmark}

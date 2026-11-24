@@ -44,4 +44,10 @@ export type ChatPreview = {
   plan: Plan;
 };
 
-export type ChatMessage = ChatText | ChatBrowser | ChatPreview;
+export type ChatSettings = {
+  id: string;
+  role: "assistant";
+  kind: "settings";
+};
+
+export type ChatMessage = ChatText | ChatBrowser | ChatPreview | ChatSettings;

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { loadSession, saveSession } from "@/app/brand-session";
 import { ChatBrowserView } from "@/app/chat-browser";
 import { ChatPreviewView } from "@/app/chat-preview";
+import { ProjectSettings } from "@/app/project-settings";
 import type { ChatClip, ChatMessage, SelectedClip } from "@/lib/chat";
 import type { Plan } from "@/lib/plan";
+import { defaultSession, styleGuide, type StyleSession } from "@/lib/style";
 
 const storageKey = "content-engine-chat";
 
@@ -39,7 +42,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
-  const [livePreview, setLivePreview] = useState<string | null>(null);
+  const [session, setSession] = useState<StyleSession | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const wasBusy = useRef(false);
@@ -54,6 +57,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
     } catch {
       setMessages([]);
     }
+    setSession(loadSession());
     setReady(true);
   }, []);
 
@@ -70,6 +74,16 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
     if (wasBusy.current && !busy) inputRef.current?.focus();
     wasBusy.current = busy;
   }, [busy]);
+
+  function updateSession(next: StyleSession) {
+    setSession(next);
+    saveSession(next);
+  }
+
+  function clearHistory() {
+    setMessages([]);
+    setDraft("");
+  }
 
   function toggleClip(messageId: string, clip: ChatClip) {
     setMessages((current) =>
@@ -128,7 +142,13 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
         reply?: string;
         browser?: { query: string; total: number; clips: ChatClip[] };
         preview?: Plan;
+        settings?: boolean;
+        clear?: boolean;
       };
+      if (response.ok && data.clear) {
+        clearHistory();
+        return;
+      }
       const reply = data.reply || data.error || "The reply did not come back.";
       const added: ChatMessage[] = [{ id: crypto.randomUUID(), role: "assistant", kind: "text", text: reply }];
       if (response.ok && data.browser) {
@@ -146,10 +166,11 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
           perPage: 12,
         });
       }
+      if (response.ok && data.settings) {
+        added.push({ id: crypto.randomUUID(), role: "assistant", kind: "settings" });
+      }
       if (response.ok && data.preview) {
-        const previewId = crypto.randomUUID();
-        added.push({ id: previewId, role: "assistant", kind: "preview", plan: data.preview });
-        setLivePreview(previewId);
+        added.push({ id: crypto.randomUUID(), role: "assistant", kind: "preview", plan: data.preview });
       }
       setMessages((current) => [...current, ...added]);
     } catch {
@@ -161,6 +182,8 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
       setBusy(false);
     }
   }
+
+  const brand = session ?? defaultSession(styleGuide);
 
   return (
     <div className="flex min-h-dvh flex-col bg-white text-zinc-900">
@@ -184,7 +207,18 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
                 />
               );
             }
-            return <ChatPreviewView key={message.id} plan={message.plan} titleFont={titleFont} bodyFont={bodyFont} background={message.id === livePreview} />;
+            if (message.kind === "settings") {
+              return session ? <ProjectSettings key={message.id} session={session} onChange={updateSession} /> : null;
+            }
+            return (
+              <ChatPreviewView
+                key={message.id}
+                plan={message.plan}
+                titleFont={titleFont}
+                bodyFont={bodyFont}
+                session={brand}
+              />
+            );
           })}
           {busy ? <p className="text-sm text-zinc-500">Working…</p> : null}
           <div ref={endRef} />
@@ -197,14 +231,24 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
           void send();
         }}
       >
-        <input
-          ref={inputRef}
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          disabled={busy || !ready}
-          placeholder="Ask about the footage"
-          className="w-full rounded-full border border-zinc-300 px-4 py-3 text-sm outline-none"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            disabled={busy || !ready}
+            placeholder="Ask about the footage"
+            className="min-w-0 flex-1 rounded-full border border-zinc-300 px-4 py-3 text-sm outline-none"
+          />
+          <button
+            type="button"
+            className="shrink-0 rounded-full border border-zinc-300 px-4 py-3 text-sm disabled:opacity-50"
+            disabled={busy || messages.length === 0}
+            onClick={clearHistory}
+          >
+            Clear
+          </button>
+        </div>
         <p className="text-xs text-zinc-400">{nextStep(messages)}</p>
       </form>
     </div>

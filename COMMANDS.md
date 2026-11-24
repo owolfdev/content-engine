@@ -15,6 +15,14 @@ Makes a video from the clips you have selected.
 The length is 8 to 30 seconds. A shorter request is made at 8 seconds.
 make_cut 12
 
+project_settings
+Opens the project settings: the property name, logo, where the logo sits, type, and theme.
+project_settings
+
+clear_history
+Clears the conversation.
+clear_history
+
 commands
 Shows this list.
 commands

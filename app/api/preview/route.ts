@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { splicePreview, type PreviewShot } from "@/lib/quick-preview";
 import type { PlanShape } from "@/lib/plan";
-import { preparePreview } from "@/lib/sources/pexels";
+import { preparePreview, saveSmallProxy } from "@/lib/sources/pexels";
 
 function readShots(value: unknown): PreviewShot[] {
   if (!Array.isArray(value)) return [];
@@ -23,13 +23,19 @@ function readShape(value: unknown): PlanShape {
 
 export async function POST(request: Request) {
   await connection();
-  let body: { files?: unknown; clips?: unknown; shape?: unknown; music?: unknown } = {};
+  let body: { files?: unknown; clips?: unknown; shape?: unknown; music?: unknown; ids?: unknown } = {};
   try {
     body = (await request.json()) as typeof body;
   } catch {
     body = {};
   }
   try {
+    const ids = Array.isArray(body.ids) ? body.ids.filter((id): id is string => typeof id === "string" && /^\d+$/.test(id)) : [];
+    if (ids.length) {
+      const proxies = [];
+      for (const id of ids.slice(0, 6)) proxies.push({ id, url: await saveSmallProxy(id) });
+      return Response.json({ proxies }, { headers: { "Cache-Control": "no-store" } });
+    }
     const shots = readShots(body.clips);
     if (shots.length) {
       const music = typeof body.music === "string" ? body.music : null;

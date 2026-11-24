@@ -330,6 +330,63 @@ export async function browsePexels(phrase: string, shape: PlanShape = "16:9", pa
   return { total: body.total_results ?? clips.length, page: safePage, perPage: safePerPage, clips };
 }
 
+async function videoFiles(id: string) {
+  const key = process.env.PEXELS_API_KEY;
+  if (!key) throw new Error("Footage is unavailable right now.");
+  const response = await fetch(`https://api.pexels.com/videos/videos/${id}`, {
+    headers: { Authorization: key, "User-Agent": "content-engine" },
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (!response.ok) throw new Error("The preview could not be prepared.");
+  const body = (await response.json()) as PexelsVideo;
+  return (body.video_files ?? []).filter((file) => file.file_type === "video/mp4" && file.link && file.width && file.height);
+}
+
+function byArea(files: PexelsFile[], largest: boolean) {
+  return [...files].sort((a, b) => {
+    const area = ((b.width ?? 0) * (b.height ?? 0)) - ((a.width ?? 0) * (a.height ?? 0));
+    return largest ? area : -area;
+  })[0];
+}
+
+const proxyJobs = new Map<string, Promise<string>>();
+
+export async function saveSmallProxy(id: string) {
+  if (!/^\d+$/.test(id)) throw new Error("One of the clips could not be used.");
+  const running = proxyJobs.get(id);
+  if (running) return running;
+  const task = (async () => {
+    if (await previewReady(id)) return `/library/pexels/${id}-preview.mp4`;
+    const file = byArea(await videoFiles(id), false);
+    if (!file?.link || !pexelsFileLink(file.link)) throw new Error("The preview could not be prepared.");
+    await mkdir(cacheDir, { recursive: true });
+    const dest = path.join(cacheDir, `${id}-preview.mp4`);
+    const partial = `${dest}.part.mp4`;
+    try {
+      await download(file.link, partial);
+      await rename(partial, dest);
+    } catch (error) {
+      await unlink(partial).catch(() => undefined);
+      throw error;
+    }
+    return `/library/pexels/${id}-preview.mp4`;
+  })().finally(() => {
+    proxyJobs.delete(id);
+  });
+  proxyJobs.set(id, task);
+  return task;
+}
+
+export async function saveMaster(id: string) {
+  if (!/^\d+$/.test(id)) throw new Error("One of the clips could not be used.");
+  if (await cached(id)) return `/library/pexels/${id}.mp4`;
+  const file = byArea(await videoFiles(id), true);
+  if (!file?.link) throw new Error("One of the clips could not be used.");
+  await ensureFile(id, file.link);
+  return `/library/pexels/${id}.mp4`;
+}
+
 export async function preparePreview(file: string) {
   const id = /^\/library\/pexels\/(\d+)\.mp4$/.exec(file)?.[1];
   if (!id || !(await cached(id))) return;

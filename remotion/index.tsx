@@ -44,7 +44,7 @@ function Root() {
         height: props.height,
         props: {
           ...props,
-          titleFont: display.fontFamily,
+          titleFont: props.titleFont === "body" || props.titleFont === body.fontFamily ? body.fontFamily : display.fontFamily,
           bodyFont: body.fontFamily,
         },
       })}

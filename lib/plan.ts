@@ -56,6 +56,9 @@ export type PlanGraphics = {
   accent: string;
   titleColor: string;
   background: string;
+  logo?: string;
+  logoPlace?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  titleFont?: "display" | "body";
 };
 
 export type Plan = {

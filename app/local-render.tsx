@@ -10,12 +10,11 @@ type RenderProgress = {
   detail: string;
 };
 
-export function LocalRender({ plan, autoStart = false }: { plan: Plan; autoStart?: boolean }) {
+export function LocalRender({ plan }: { plan: Plan }) {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<RenderProgress | null>(null);
   const fileRef = useRef<Blob | null>(null);
-  const started = useRef(false);
 
   useEffect(() => {
     if (!busy) {
@@ -80,25 +79,13 @@ export function LocalRender({ plan, autoStart = false }: { plan: Plan; autoStart
       fileRef.current = blob;
       saveBlob(blob);
       const voice = response.headers.get("x-render-voice");
-      setMessage(
-        autoStart
-          ? "The video is ready."
-          : voice === "saved-take"
-            ? "Downloaded palm-shore.mp4, with the saved voice take."
-            : "Downloaded palm-shore.mp4.",
-      );
+      setMessage(voice === "saved-take" ? "Downloaded palm-shore.mp4, with the saved voice take." : "Downloaded palm-shore.mp4.");
     } catch {
       setMessage("The video could not be made.");
     } finally {
       setBusy(false);
     }
   }
-
-  useEffect(() => {
-    if (!autoStart || started.current) return;
-    started.current = true;
-    void renderFile();
-  }, [autoStart]);
 
   return (
     <div className="flex flex-col gap-2">

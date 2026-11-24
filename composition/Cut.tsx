@@ -26,6 +26,7 @@ export type CutProps = {
   accent: string;
   background: string;
   margins: { top: number; right: number; bottom: number; left: number };
+  logoPlace?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   width: number;
   height: number;
 };
@@ -53,6 +54,7 @@ export function Cut({
   accent,
   background,
   margins,
+  logoPlace = "top-left",
 }: CutProps) {
   const frame = useCurrentFrame();
   const { width, height, durationInFrames, fps } = useVideoConfig();
@@ -100,10 +102,12 @@ export function Cut({
         alt=""
         style={{
           position: "absolute",
-          top: height * margins.top,
-          left: width * margins.left,
           width: height * 0.07,
           height: height * 0.07,
+          top: logoPlace.startsWith("top") ? height * margins.top : undefined,
+          bottom: logoPlace.startsWith("bottom") ? height * margins.bottom : undefined,
+          left: logoPlace.endsWith("left") ? width * margins.left : undefined,
+          right: logoPlace.endsWith("right") ? width * margins.right : undefined,
         }}
       />
 

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { connection } from "next/server";
 import type { Plan } from "@/lib/plan";
-import { savePexelsClip } from "@/lib/sources/pexels";
+import { saveMaster } from "@/lib/sources/pexels";
 
 // Local only. Remotion's Chrome closes when this runs inside the Next.js server,
 // so the route hands the plan to a separate process. A deployed site needs a different path.
@@ -178,10 +178,10 @@ export async function POST(request: Request) {
   snapshot = { progress: 0.02, label: "Fetching the clips", remaining: "", frames: "" };
   const output = path.join(os.tmpdir(), `palm-shore-${Date.now()}.mp4`);
   try {
-    const remote = plan.clips.filter((clip) => clip.stream && /^\d+$/.test(clip.id));
+    const remote = plan.clips.filter((clip) => /^\d+$/.test(clip.id));
     for (const [index, clip] of remote.entries()) {
       snapshot = { progress: 0.02 + (index / Math.max(1, remote.length)) * 0.06, label: "Fetching the clips", remaining: "", frames: "" };
-      await savePexelsClip(clip.id, clip.stream ?? "");
+      await saveMaster(clip.id);
     }
     snapshot = { progress: 0.02, label: "Starting", remaining: "", frames: "" };
     await renderOnThisComputer(plan, output);

@@ -26,6 +26,8 @@ Otherwise interpret their intention:
 - count_videos when they ask how many videos match a subject, or name a new subject. query is only the subject, a few words, such as crows. Then ask if they want to see them.
 - show_videos when they ask to see footage, agree to look, or say the videos are not on screen. query is the subject. The gallery appears only because this command ran. Do not say the videos are on screen unless this command ran in this turn.
 - make_cut when they ask to make a video from the clips already selected. seconds is the length they asked for. If they ask for fewer than 8 seconds, pass 8 and say the shortest cut is 8 seconds. If they ask for more than 30, pass 30 and say so. The preview appears with that reply, so do not ask for permission again. If none are selected, ask them to select clips in the gallery already on screen. Do not open a new search.
+- project_settings when they ask to change the project, the brand, the logo, where the logo sits, the fonts, or the theme. The settings appear with that reply. Do not ask whether to open them, and do not turn that request into a footage search.
+- clear_history when they ask to clear, reset, or delete the conversation. Do not search.
 
 Do not mention commands, software, stock sites, servers, files, or how the app is built unless they asked to see the commands.
 Do not offer to record a voiceover. The preview is silent.`;
@@ -125,7 +127,7 @@ export async function POST(request: Request) {
     if ("error" in direct) return Response.json({ reply: direct.error, browser: null, preview: null });
     try {
       const effect = await runCommand(direct.name, direct.args, commandContext, "direct");
-      return Response.json({ reply: effect.reply, browser: effect.browser, preview: effect.preview });
+      return Response.json({ reply: effect.reply, browser: effect.browser, preview: effect.preview, settings: effect.settings, clear: effect.clear });
     } catch (error) {
       return Response.json({ error: guestMessage(error) }, { status: 502 });
     }
@@ -142,6 +144,8 @@ export async function POST(request: Request) {
   let browser: Gallery | null = null;
   let preview: Plan | null = null;
   let reply = "";
+  let settings = false;
+  let clear = false;
 
   try {
     for (let round = 0; round < 3; round += 1) {
@@ -158,21 +162,31 @@ export async function POST(request: Request) {
         const effect = await runCommand(call.function.name, { query: args.query, seconds: args.seconds, title: args.title }, commandContext, "model");
         if (effect.browser) browser = effect.browser;
         if (effect.preview) preview = effect.preview;
+        if (effect.settings) {
+          settings = true;
+          reply = effect.reply;
+        }
+        if (effect.clear) {
+          clear = true;
+          reply = "";
+        }
         if (call.function.name === "commands") {
           reply = effect.reply;
           showGuide = true;
         }
         messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(effect.forModel) });
       }
-      if (showGuide) break;
+      if (showGuide || settings || clear) break;
     }
   } catch (error) {
     return Response.json({ error: guestMessage(error) }, { status: 502 });
   }
 
   return Response.json({
-    reply: reply || "Done.",
+    reply: clear ? "" : reply || "Done.",
     browser,
     preview,
+    settings,
+    clear,
   });
 }

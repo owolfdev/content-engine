@@ -3,6 +3,7 @@
 import { CutPreview } from "@/app/cut-preview";
 import { LocalRender } from "@/app/local-render";
 import type { Plan } from "@/lib/plan";
+import { styleGuide, type StyleSession } from "@/lib/style";
 
 function stamp(seconds: number) {
   const whole = Math.max(0, Math.round(seconds));
@@ -15,12 +16,12 @@ export function ChatPreviewView({
   plan,
   titleFont,
   bodyFont,
-  background = false,
+  session,
 }: {
   plan: Plan;
   titleFont: string;
   bodyFont: string;
-  background?: boolean;
+  session: StyleSession;
 }) {
   let cursor = 0;
   const rows = plan.clips.map((clip) => {
@@ -29,12 +30,27 @@ export function ChatPreviewView({
     return { clip, start, end: cursor };
   });
 
+  const preset = styleGuide.presets.find((item) => item.id === session.presetId) ?? styleGuide.presets[0];
+  const branded = {
+    ...plan,
+    musicId: session.musicId ?? preset.musicId,
+    graphics: {
+      wordmark: session.wordmark.trim() || plan.graphics?.wordmark || styleGuide.name,
+      accent: session.accent ?? preset.colors.accent,
+      titleColor: preset.colors.title,
+      background: preset.colors.background,
+      logo: session.logo || plan.graphics?.logo,
+      logoPlace: session.logoPlace,
+      titleFont: session.titleFont,
+    },
+  };
+
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-3">
       <p className="text-sm text-zinc-700">
         {plan.title}. {rows.length} clip{rows.length === 1 ? "" : "s"}, {stamp(cursor)}.
       </p>
-      <CutPreview plan={plan} titleFont={titleFont} bodyFont={bodyFont} quick />
+      <CutPreview plan={branded} titleFont={titleFont} bodyFont={bodyFont} quick />
       <ol className="flex flex-col gap-1 text-sm text-zinc-600">
         {rows.map((row) => (
           <li key={row.clip.id}>
@@ -42,7 +58,7 @@ export function ChatPreviewView({
           </li>
         ))}
       </ol>
-      <LocalRender plan={plan} autoStart={background} />
+      <LocalRender plan={branded} />
     </div>
   );
 }
