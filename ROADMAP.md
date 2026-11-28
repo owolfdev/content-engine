@@ -1,3 +1,7 @@
+# Content engine
+
+This is the older trial plan. It is not the current app. Read `AGENTS.md` before changing anything.
+
 # Content engine roadmap
 
 Private trial of the video creation path. A potential client opens an invite link, types a request, and reviews a branded cut in the browser. This is the creation slice of the proposal: find footage, apply a style, add voice, and show the result in the requested shape and language.

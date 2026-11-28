@@ -28,6 +28,7 @@ export function CutPreview({
   jump = null,
   onClip,
   onPlayhead,
+  onShape,
 }: {
   plan: Plan;
   titleFont: string;
@@ -36,6 +37,7 @@ export function CutPreview({
   jump?: { at: number; id: number } | null;
   onClip?: (index: number) => void;
   onPlayhead?: (seconds: number) => void;
+  onShape?: (shape: PlanShape) => void;
 }) {
   const [shape, setShape] = useState<PlanShape>(plan.shape);
   const [previewReady, setPreviewReady] = useState(false);
@@ -121,7 +123,10 @@ export function CutPreview({
             type="button"
             className="rounded border border-zinc-300 px-3 py-1"
             aria-pressed={shape === item.id}
-            onClick={() => setShape(item.id)}
+            onClick={() => {
+              setShape(item.id);
+              onShape?.(item.id);
+            }}
           >
             {item.label}
           </button>

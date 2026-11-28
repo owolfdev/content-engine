@@ -125,7 +125,7 @@ export function ChatBrowserView({
   }
 
   function applySize() {
-    const next = Math.min(48, Math.max(4, Math.round(Number(size)) || perPage));
+    const next = Math.min(80, Math.max(4, Math.round(Number(size)) || perPage));
     setSize(String(next));
     if (next !== perPage) void load(1, next);
   }
@@ -207,7 +207,7 @@ export function ChatBrowserView({
           <input
             type="number"
             min={4}
-            max={48}
+            max={80}
             value={size}
             onChange={(event) => setSize(event.target.value)}
             onBlur={applySize}

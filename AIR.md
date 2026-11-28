@@ -22,21 +22,19 @@ The hostname for this Air is `content-engine.cryptoxombies.com`. The only email 
 
 `cloudflared` 2026.11.2 is installed with Homebrew. `cloudflared tunnel login` succeeded. The origin certificate is `/Users/wolf/.cloudflared/cert.pem`. The tunnel is named `content-engine`, id `93c2d13c-9cc9-45d2-9452-442631fd8a61`. Its credentials file is `/Users/wolf/.cloudflared/93c2d13c-9cc9-45d2-9452-442631fd8a61.json`. The config is `/Users/wolf/.cloudflared/config.yml`, and it points that hostname at `http://localhost:3000`. The DNS CNAME for the hostname routes to this tunnel. Do not commit the certificate, the credentials JSON, or the config file. Do not print them.
 
-Cloudflare Access is not created yet. The tunnel process is not running. Until both of those are done, the hostname does not serve the app. Sleep prevention on power has not been confirmed.
+On 24 November 2026 Access had not been created and the tunnel process was not running. The owner later opened the hostname and said it was working, so do not assume that checklist is still open. Sleep prevention on power has not been confirmed. If the page fails, read the task below before changing Cloudflare.
 
 ## What this app is
 
-A private demo of a video editor. A person writes a request. The app answers in a chat. When they agree to see footage, a gallery is inserted in the thread. They select clips. When they ask for a cut, a preview is inserted. A button on that preview writes an MP4 on the computer that is running the server.
+Read `AGENTS.md` before changing product behavior. This file is the Air, the tunnel, and Cloudflare. `AGENTS.md` wins when this file disagrees about how the app works.
 
-The front page is `/` (`app/chat-screen.tsx`). The older storyboard builder is `/studio`.
-
-Pexels is the stand-in footage library for a fictional resort, Palm Shore. Search stays a live keyword search. The chat does not record a voiceover. Previews are silent. The local MP4 button is labeled “Render MP4 (this computer only)”. Cuts are 8–30 seconds, 1920×1080, 30 fps.
+The front page is `/`. The older storyboard is `/studio`. The chat does not record a voiceover. The button on a preview is "Download video". It writes an MP4 on the computer serving the page. The file is named from the property, or `video.mp4` when the property is empty. A chat cut is the length the guest asked for, up to 10 minutes, not an 8–30 second range.
 
 ## The task now
 
-Finish the login gate, start the tunnel that is already configured, and prove that the work machine can open it and render one short file.
+The tunnel and the hostname were set up on 24 November 2026. The owner later opened `https://content-engine.cryptoxombies.com` and said it was working. Do not log in again, do not create another tunnel, and do not change the hostname. If the hostname shows Cloudflare error 1033, the connector is down: the app must be on port 3000 and `cloudflared tunnel run content-engine` must be running on this Air.
 
-Leave the app running. It is `npm run dev` on port 3000 unless the owner says otherwise. The tunnel already points at `http://localhost:3000`. Do not restart the app, switch it to `next start`, or change ports unless it has already stopped.
+Leave the app running. It is `npm run dev` on port 3000 unless the owner says otherwise. The tunnel already points at `http://localhost:3000`. Do not restart the app, switch it to `next start`, or change ports unless it has already stopped. Do not treat the checklist below as unfinished work when the hostname is already answering.
 
 ### Still to do on the Air
 
@@ -84,7 +82,7 @@ A public Cloudflare hostname is not Cloudflare’s allowed way to distribute vid
 
 The child receives a stripped environment: `PATH`, `HOME`, `TMPDIR`, `USER`, `PWD`, `LANG`, `LC_ALL`, `NODE_ENV`, and the two ElevenLabs voice variables. It does not receive `NODE_OPTIONS`. The route copies Remotion’s Chrome into `~/Library/Caches/content-engine/chrome-headless-shell` once and passes that binary. The copy is skipped when the destination binary already exists. Delete that cache only when Remotion’s Chrome is upgraded.
 
-The child writes `PROGRESS {json}` lines to stdout. The page polls `GET /api/render`. Output goes to the temp directory, is returned as `palm-shore.mp4`, and is deleted. Render settings: h264, crf 20, concurrency 1, 120 second timeout.
+The child writes `PROGRESS {json}` lines to stdout. The page polls `GET /api/render`. Output goes to the temp directory, is returned under the property's file name, and is deleted. Render settings: h264, crf 20, concurrency 1, 120 second timeout.
 
 `scripts/alias-hook.mjs` must stay a resolve-only hook. A load hook on Node 22 makes `require.cache` undefined and webpack crashes inside `@remotion/bundler`. JSON imports of `@/` files are rewritten to generated modules in the temp directory.
 
@@ -96,7 +94,7 @@ Clip paths in a render must start with `/library/` or `/brand/` and must not con
 
 ## Chat behavior worth keeping
 
-Ordinary language is interpreted into one command. The commands are `count_videos`, `show_videos`, `make_cut`, `project_settings`, `clear_history`, and `commands`. A message that is itself a command, such as `make_cut 12` or `project_settings`, runs directly. When the guest asks which commands exist, the reply is the text in `COMMANDS.md`. The model does not draw the interface. A count stays as words. The gallery appears when they want to see footage. The preview appears when they ask for a cut from the selection. Project settings appear when they ask to change the project. `clear_history` clears the conversation.
+Ordinary language is interpreted into one command. The commands are `count_videos`, `show_videos`, `make_cut`, `edit_cut`, `project_settings`, `clear_history`, and `commands`. The current rules for those commands, the gallery, the editor, and the brand are in `AGENTS.md`. When the guest asks which commands exist, the reply is the text in `COMMANDS.md`.
 
 The gallery search box starts with the model’s phrase. Editing it searches again and keeps the selection. Selected clips stay in the strip under the grid, including after a new search or another page. The prompt takes the cursor again after each reply.
 

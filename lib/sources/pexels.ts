@@ -310,7 +310,7 @@ export async function countPexels(phrase: string, shape: PlanShape = "16:9") {
 export async function browsePexels(phrase: string, shape: PlanShape = "16:9", page = 1, perPage = 12) {
   const query = phrase.trim();
   const safePage = Math.min(500, Math.max(1, Math.floor(page) || 1));
-  const safePerPage = Math.min(48, Math.max(4, Math.floor(perPage) || 12));
+  const safePerPage = Math.min(80, Math.max(4, Math.floor(perPage) || 12));
   if (!query) return { total: 0, page: safePage, perPage: safePerPage, clips: [] as BrowseClip[] };
   const body = await readPage(query, shape, safePage, safePerPage);
   const clips: BrowseClip[] = [];
@@ -328,6 +328,30 @@ export async function browsePexels(phrase: string, shape: PlanShape = "16:9", pa
     });
   }
   return { total: body.total_results ?? clips.length, page: safePage, perPage: safePerPage, clips };
+}
+
+export async function browsePexelsSpread(phrase: string, pages = 4, perPage = 12, shape: PlanShape = "16:9") {
+  const query = phrase.trim();
+  const pageCount = Math.min(8, Math.max(1, Math.floor(pages) || 1));
+  const safePerPage = Math.min(48, Math.max(4, Math.floor(perPage) || 12));
+  if (!query) return { total: 0, page: 1, perPage: safePerPage, clips: [] as BrowseClip[] };
+  const first = await browsePexels(query, shape, 1, safePerPage);
+  const rest = await Promise.all(
+    Array.from({ length: pageCount - 1 }, (_, index) =>
+      browsePexels(query, shape, index + 2, safePerPage).catch(() => null),
+    ),
+  );
+  const clips: BrowseClip[] = [];
+  const seen = new Set<string>();
+  for (const found of [first, ...rest]) {
+    if (!found) continue;
+    for (const clip of found.clips) {
+      if (seen.has(clip.id)) continue;
+      seen.add(clip.id);
+      clips.push(clip);
+    }
+  }
+  return { total: first.total, page: 1, perPage: Math.min(48, pageCount * safePerPage), clips };
 }
 
 async function videoFiles(id: string) {

@@ -1,5 +1,7 @@
 # Video analysis spec
 
+This is a spec, not a task. Read `AGENTS.md` before changing the app. Build this only when asked.
+
 Prepares footage so the content engine can cut it. The output is not a label dump. It is a set of timed ranges the planner can choose: long enough for a line of voiceover, safe to crop into 9:16 and 1:1, and fit to sit beside the next shot.
 
 This is a local tool with one optional model call. It is the substitute for Google Video Intelligence described in the cost notes. It does not replace the content-engine trial. The planner in the trial reads catalog tags until these records exist. Build this when a library needs ranges, or when asked.

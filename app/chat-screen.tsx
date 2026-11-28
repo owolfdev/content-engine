@@ -169,12 +169,21 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
     const cutMessage = openCut ?? latestCut;
     const cut = cutMessage?.kind === "preview" ? cutMessage.plan : null;
     const cutId = cutMessage?.id ?? "";
+    const clipRecord = (clip: ChatClip): SelectedClip => ({ id: clip.id, link: clip.link, author: clip.author, sourcePage: clip.sourcePage, duration: clip.duration, image: clip.image });
     const selection: SelectedClip[] = browser
       ? browser.selected.flatMap((id) => {
           const clip = (browser.remembered ?? []).find((item) => item.id === id) ?? browser.clips.find((item) => item.id === id);
-          return clip ? [{ id: clip.id, link: clip.link, author: clip.author, sourcePage: clip.sourcePage, duration: clip.duration, image: clip.image }] : [];
+          return clip ? [clipRecord(clip)] : [];
         })
       : [];
+    const footage: SelectedClip[] = [];
+    const seen = new Set<string>();
+    for (const clip of [...(browser?.clips ?? []), ...(browser?.remembered ?? [])]) {
+      if (seen.has(clip.id)) continue;
+      seen.add(clip.id);
+      footage.push(clipRecord(clip));
+      if (footage.length >= 80) break;
+    }
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -184,6 +193,7 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
         body: JSON.stringify({
           messages: history.filter((message) => message.kind === "text").map((message) => ({ role: message.role, text: message.text })),
           selection,
+          clips: footage,
           latestQuery: browser?.query ?? "",
           cut,
           wordmark: session?.wordmark ?? "",
@@ -192,12 +202,13 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
       const data = (await response.json()) as {
         error?: string;
         reply?: string;
-        browser?: { query: string; total: number; clips: ChatClip[] };
+        browser?: { query: string; total: number; clips: ChatClip[]; perPage?: number };
         preview?: Plan;
         settings?: boolean;
         clear?: boolean;
         editing?: boolean;
         replace?: boolean;
+        picked?: string[];
       };
       if (response.ok && data.clear) {
         clearHistory();
@@ -207,6 +218,11 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
       const added: ChatMessage[] = [{ id: crypto.randomUUID(), role: "assistant", kind: "text", text: reply }];
       if (response.ok && data.browser) {
         const previous = [...history].reverse().find((message) => message.kind === "browser");
+        const fromPreview = data.preview && !data.replace ? data.preview.clips.map((clip) => clip.id) : null;
+        const selected = fromPreview ?? previous?.selected ?? [];
+        const remembered = fromPreview
+          ? data.browser.clips.filter((clip) => selected.includes(clip.id))
+          : previous?.remembered ?? [];
         added.push({
           id: crypto.randomUUID(),
           role: "assistant",
@@ -214,10 +230,10 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
           query: data.browser.query,
           total: data.browser.total,
           clips: data.browser.clips,
-          selected: previous?.selected ?? [],
-          remembered: previous?.remembered ?? [],
+          selected,
+          remembered,
           page: 1,
-          perPage: 12,
+          perPage: data.browser.perPage ?? 12,
         });
       }
       if (response.ok && data.settings) {
@@ -234,7 +250,28 @@ export function ChatScreen({ titleFont, bodyFont }: { titleFont: string; bodyFon
               return { ...message, editing: data.editing ?? true, prior: message.plan, plan: data.preview };
             })
           : current;
-        return [...revised, ...added];
+        const next = [...revised, ...added];
+        if (!data.picked?.length) return next;
+        let index = -1;
+        for (let cursor = next.length - 1; cursor >= 0; cursor -= 1) {
+          if (next[cursor].kind === "browser") {
+            index = cursor;
+            break;
+          }
+        }
+        if (index < 0) return next;
+        const message = next[index];
+        if (message.kind !== "browser") return next;
+        const picked = data.picked.filter((id) => message.clips.some((clip) => clip.id === id) || (message.remembered ?? []).some((clip) => clip.id === id));
+        if (!picked.length) return next;
+        const remembered = [...(message.remembered ?? [])];
+        for (const id of picked) {
+          const clip = message.clips.find((item) => item.id === id);
+          if (clip && !remembered.some((item) => item.id === id)) remembered.push(clip);
+        }
+        const copy = next.slice();
+        copy[index] = { ...message, selected: picked, remembered };
+        return copy;
       });
     } catch {
       setMessages((current) => [

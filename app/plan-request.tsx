@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CutPreview } from "@/app/cut-preview";
 import { LocalRender } from "@/app/local-render";
 import { ScriptEditor } from "@/app/script-editor";
 import { Storyboard } from "@/app/storyboard";
-import type { Plan } from "@/lib/plan";
+import type { Plan, PlanShape } from "@/lib/plan";
 import { draftScript, type Script } from "@/lib/script";
 import type { FootageSource } from "@/lib/plan";
 
@@ -22,6 +22,10 @@ export function PlanRequest({
   const [source, setSource] = useState<FootageSource>("pexels");
   const [script, setScript] = useState<Script | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [shape, setShape] = useState<PlanShape>(plan?.shape ?? "16:9");
+  useEffect(() => {
+    if (plan) setShape(plan.shape);
+  }, [plan]);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -146,8 +150,8 @@ export function PlanRequest({
               <li key={note}>{note}</li>
             ))}
           </ul>
-          {plan.clips.length ? <CutPreview plan={plan} titleFont={titleFont} bodyFont={bodyFont} /> : null}
-          {plan.clips.length ? <LocalRender plan={plan} /> : null}
+          {plan.clips.length ? <CutPreview plan={{ ...plan, shape }} titleFont={titleFont} bodyFont={bodyFont} onShape={setShape} /> : null}
+          {plan.clips.length ? <LocalRender plan={{ ...plan, shape }} /> : null}
         </div>
       ) : null}
     </section>

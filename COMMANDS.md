@@ -10,6 +10,14 @@ show_videos
 Shows videos for a subject.
 show_videos wolves
 
+make_video
+Makes a video about a subject. Several pages of footage open, and four clips are chosen from them. The video is 15 seconds unless a length is named. A shot limit uses enough clips to fill that length, and no shot runs longer.
+make_video children on the beach shot=2 seconds=30
+make_video children on the beach
+make_video children on the beach 10
+After a video is on screen, name a maker to keep only that person's clips.
+make_video maker="Kampus Production"
+
 make_cut
 Makes a video from the clips you have selected.
 The length is whatever you ask for, up to 10 minutes. Every selected clip is used, up to 60.
